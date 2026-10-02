@@ -3,80 +3,181 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const num = (id) => parseFloat($(id).value) || 0;
+const radio = (name) => (document.querySelector(`input[name="${name}"]:checked`) || {}).value;
+const icon = (id) => `<svg><use href="#i-${id}"/></svg>`;
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function load(key, fallback) {
   try { const v = JSON.parse(localStorage.getItem(key)); return v ?? fallback; } catch { return fallback; }
 }
 function save(key, val) {
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch { toast("Storage full ya blocked hai"); }
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch { toast("Storage full ya blocked hai", false); }
 }
 let toastTimer;
-function toast(msg) {
+function toast(msg, ok = true) {
   const t = $("toast");
-  t.textContent = msg; t.classList.add("show");
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 1800);
+  t.innerHTML = (ok ? icon("check") : "") + esc(msg);
+  t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 1900);
 }
-async function copy(text) {
-  try { await navigator.clipboard.writeText(text); toast("Copied"); }
-  catch { toast("Copy nahi hua, manually select karo"); }
+async function copy(text, btn) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast("Copied");
+    if (btn) { btn.classList.add("done"); btn.innerHTML = icon("check"); setTimeout(() => { btn.classList.remove("done"); btn.innerHTML = icon("copy"); }, 1400); }
+  } catch { toast("Copy nahi hua, manually select karo", false); }
 }
 
-/* ---------- Tabs ---------- */
-document.querySelectorAll("#tabs button").forEach((b) => {
-  b.onclick = () => {
-    document.querySelectorAll("#tabs button").forEach((x) => x.classList.toggle("active", x === b));
-    document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === b.dataset.tab));
-    save("tab", b.dataset.tab);
-    b.scrollIntoView({ block: "nearest", inline: "center" });
+/* Animated number: counts from the previous value to the new one. */
+function countUp(el, to, decimals = 0) {
+  const from = parseFloat(el.dataset.v || "0");
+  el.dataset.v = to;
+  if (reduceMotion || from === to) { el.textContent = to.toFixed(decimals); return; }
+  const t0 = performance.now(), dur = 700;
+  const step = (t) => {
+    const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+    el.textContent = (from + (to - from) * e).toFixed(decimals);
+    if (p < 1) requestAnimationFrame(step);
   };
-});
-{
-  const t = load("tab", "sens");
-  const b = document.querySelector(`#tabs button[data-tab="${t}"]`);
-  if (b) b.click();
+  requestAnimationFrame(step);
 }
+/* Bars are rendered at 0 width and grown on the next frame so the transition plays. */
+function growBars(root) {
+  requestAnimationFrame(() => requestAnimationFrame(() =>
+    root.querySelectorAll(".bar i[data-w]").forEach((i) => { i.style.width = i.dataset.w + "%"; })));
+}
+const bar = (pct, cls = "") => `<div class="bar ${cls}"><i data-w="${clamp(pct, 0, 100).toFixed(1)}"></i></div>`;
+function bump(el) { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
+
+/* Button ripple */
+document.addEventListener("pointerdown", (e) => {
+  const b = e.target.closest(".btn");
+  if (!b || reduceMotion) return;
+  const r = b.getBoundingClientRect(), s = Math.max(r.width, r.height);
+  const span = document.createElement("span");
+  span.className = "ripple";
+  span.style.cssText = `width:${s}px;height:${s}px;left:${e.clientX - r.left - s / 2}px;top:${e.clientY - r.top - s / 2}px`;
+  b.appendChild(span); setTimeout(() => span.remove(), 650);
+});
+
+/* Range sliders: live value label + filled track */
+function syncRange(el, fmt) {
+  const p = ((el.value - el.min) / (el.max - el.min)) * 100;
+  el.style.setProperty("--p", p + "%");
+  const out = $(el.id + "_v"); if (out) out.textContent = fmt(el.value);
+}
+
+/* ---------- Tools & routing ---------- */
+const TOOLS = [
+  { id: "sens", name: "Sensitivity", sub: "Device aur playstyle ke hisaab se perfect settings", color: "#ff8a1f" },
+  { id: "dmg", name: "Damage Calculator", sub: "Headshot, body damage, shots to kill aur TTK", color: "#f87171" },
+  { id: "cmp", name: "Weapon Compare", sub: "Har gun ki stats side by side", color: "#60a5fa" },
+  { id: "chars", name: "Character Combo", sub: "Role ke hisaab se best skills aur pet", color: "#a78bfa" },
+  { id: "stats", name: "Match Stats", sub: "Kills, K/D, win rate aur progress graph", color: "#34d399" },
+  { id: "tour", name: "Tournament", sub: "Custom room ka points table", color: "#ffbe2e" },
+  { id: "budget", name: "Diamond Planner", sub: "Goals aur top-up ka hisaab", color: "#22d3ee" },
+  { id: "names", name: "Stylish Names", sub: "Fancy fonts aur symbols wale nicknames", color: "#f472b6" },
+  { id: "codes", name: "Redeem Codes", sub: "Codes save karo, expiry track karo", color: "#fb923c" },
+];
+$("toolGrid").innerHTML = TOOLS.map((t, i) => `
+  <a class="tool" href="#${t.id}" style="--tc:${t.color};--i:${i}">
+    <span class="ico">${icon(t.id)}</span>
+    <span class="go">${icon("arrow")}</span>
+    <h4>${t.name}</h4><p>${t.sub}</p>
+  </a>`).join("");
+$("sideNav").innerHTML = `<a class="nav-link" href="#home" data-id="home"><span class="ico">${icon("home")}</span>Home</a>` +
+  TOOLS.map((t) => `<a class="nav-link" href="#${t.id}" data-id="${t.id}" style="--tc:${t.color}"><span class="ico">${icon(t.id)}</span>${t.name}</a>`).join("");
+
+const onShow = {};
+function route() {
+  const id = (location.hash.slice(1) || "home");
+  const page = $(id) && $(id).classList.contains("page") ? id : "home";
+  const tool = TOOLS.find((t) => t.id === page);
+  document.querySelectorAll(".page").forEach((p) => {
+    p.classList.remove("active");
+    if (p.id === page) {
+      [...p.children].forEach((c, i) => c.style.setProperty("--i", i));
+      void p.offsetWidth; p.classList.add("active");
+    }
+  });
+  document.querySelectorAll(".nav-link").forEach((a) => a.classList.toggle("active", a.dataset.id === page));
+  document.body.dataset.page = page;
+  $("pageTitle").textContent = tool ? tool.name : "Dashboard";
+  $("pageSub").textContent = tool ? tool.sub : "Aapke saare Free Fire tools";
+  document.title = tool ? `${tool.name} · FF Toolkit` : "FF Toolkit";
+  window.scrollTo(0, 0);
+  if (onShow[page]) onShow[page]();
+}
+window.addEventListener("hashchange", route);
 
 /* ---------- Sensitivity ---------- */
 const SENS_BASE = {
-  //            General RedDot 2x  4x  AWM FreeLook
+  //          General RedDot 2x  4x  AWM FreeLook
   rusher:   [95, 90, 85, 80, 60, 70],
   balanced: [85, 80, 75, 70, 50, 60],
   sniper:   [75, 70, 70, 65, 45, 55],
 };
 const SENS_LABELS = ["General", "Red Dot", "2x Scope", "4x Scope", "AWM Scope", "Free Look"];
-$("s_go").onclick = () => {
-  const size = clamp(num("s_size"), 4, 13);
-  const ram = clamp(num("s_ram"), 1, 24);
-  const claw = parseInt($("s_claw").value, 10);
-  let f = 1 + (size - 6.5) * 0.03;          // bigger screen -> slightly higher
-  if (ram <= 3) f -= 0.05;                  // low-end device: easier control
-  f += (claw - 3) * 0.02;                   // more fingers -> slightly higher
-  const vals = SENS_BASE[$("s_style").value].map((v) => clamp(Math.round(v * f), 1, 100));
-  $("s_out").innerHTML = "<table>" + SENS_LABELS.map((l, i) =>
-    `<tr><td>${l}</td><td class="big">${vals[i]}</td><td style="width:45%"><div class="bar"><i style="width:${vals[i]}%"></i></div></td></tr>`).join("") + "</table>";
-};
+let sensVals = [];
+function renderSens(first) {
+  syncRange($("s_size"), (v) => (+v).toFixed(1) + '"');
+  syncRange($("s_ram"), (v) => v + " GB");
+  const size = num("s_size"), ram = num("s_ram"), claw = +radio("s_claw");
+  let f = 1 + (size - 6.5) * 0.03;   // bigger screen -> slightly higher
+  if (ram <= 3) f -= 0.05;           // low-end device: easier control
+  f += (claw - 3) * 0.02;            // more fingers -> slightly higher
+  sensVals = SENS_BASE[radio("s_style")].map((v) => clamp(Math.round(v * f), 1, 100));
+  const out = $("s_out");
+  if (first || !out.children.length) {
+    out.innerHTML = SENS_LABELS.map((l, i) => `<div class="sens-row" style="--i:${i}"><span>${l}</span>${bar(0)}<b>0</b></div>`).join("");
+  }
+  [...out.children].forEach((row, i) => {
+    row.querySelector(".bar i").dataset.w = sensVals[i];
+    countUp(row.querySelector("b"), sensVals[i]);
+  });
+  growBars(out);
+}
+document.querySelectorAll("#sens input").forEach((el) => el.addEventListener("input", () => renderSens()));
+$("s_copy").onclick = (e) => copy(SENS_LABELS.map((l, i) => `${l}: ${sensVals[i]}`).join("\n"));
+onShow.sens = () => renderSens(true);
 
 /* ---------- Weapons ---------- */
-// Approximate, editable values: [name, damage, rounds/sec, magazine, headshot multiplier, effective range (m)]
+// Approximate, editable values: [name, category, damage per hit, rounds/sec, magazine, headshot multiplier, effective range (m)]
+const CATS = ["SMG", "AR", "Shotgun", "Marksman", "Sniper", "LMG", "Pistol"];
 const DEFAULT_WEAPONS = [
-  ["MP40", 18, 14, 20, 1.8, 30],
-  ["UMP", 22, 9, 20, 1.8, 40],
-  ["M1887", 70, 1.2, 2, 1.5, 12],
-  ["M4A1", 24, 8, 30, 1.8, 55],
-  ["AK47", 30, 6.5, 30, 1.8, 55],
-  ["SCAR", 22, 8.5, 30, 1.8, 55],
-  ["Groza", 34, 8, 30, 1.8, 60],
-  ["Woodpecker", 52, 2, 10, 1.8, 90],
-  ["M82B", 90, 0.6, 5, 2.5, 150],
-  ["AWM", 110, 0.5, 5, 2.5, 150],
+  ["MP40", "SMG", 18, 14, 20, 1.8, 30], ["UMP", "SMG", 22, 9, 30, 1.8, 40], ["MP5", "SMG", 20, 11, 30, 1.8, 35],
+  ["Thompson", "SMG", 21, 10, 30, 1.8, 35], ["Vector", "SMG", 16, 16, 30, 1.8, 25], ["P90", "SMG", 17, 12, 50, 1.8, 35],
+  ["Bizon", "SMG", 18, 11, 40, 1.8, 35], ["MAC10", "SMG", 17, 14, 25, 1.8, 25],
+  ["M4A1", "AR", 24, 8, 30, 1.8, 55], ["AK47", "AR", 30, 6.5, 30, 1.8, 55], ["SCAR", "AR", 22, 8.5, 30, 1.8, 55],
+  ["Groza", "AR", 34, 8, 30, 1.8, 60], ["FAMAS", "AR", 25, 9, 30, 1.8, 50], ["AN94", "AR", 28, 8, 30, 1.8, 55],
+  ["XM8", "AR", 24, 8.5, 30, 1.8, 60], ["AUG", "AR", 25, 8, 30, 1.8, 60], ["Parafal", "AR", 33, 6, 30, 1.8, 60],
+  ["G36", "AR", 26, 8, 30, 1.8, 55], ["Kingfisher", "AR", 26, 8.5, 30, 1.8, 55],
+  ["M1887", "Shotgun", 70, 1.2, 2, 1.5, 12], ["M1014", "Shotgun", 60, 1.4, 6, 1.5, 12], ["SPAS12", "Shotgun", 65, 1.1, 5, 1.5, 12],
+  ["MAG-7", "Shotgun", 55, 1.6, 8, 1.5, 12], ["M590", "Shotgun", 62, 1.3, 6, 1.5, 12],
+  ["Woodpecker", "Marksman", 52, 2, 12, 1.8, 90], ["SKS", "Marksman", 45, 2.5, 10, 2, 90], ["SVD", "Marksman", 50, 2.2, 10, 2, 100],
+  ["VSS", "Marksman", 30, 5, 20, 2, 70], ["M14", "Marksman", 40, 3, 20, 1.9, 80],
+  ["AWM", "Sniper", 110, 0.5, 5, 2.5, 150], ["M82B", "Sniper", 90, 0.6, 5, 2.5, 150], ["Kar98k", "Sniper", 95, 0.6, 5, 2.5, 140],
+  ["M24", "Sniper", 100, 0.55, 5, 2.5, 140],
+  ["M249", "LMG", 30, 8, 100, 1.8, 60], ["M60", "LMG", 27, 10, 60, 1.8, 55], ["Kord", "LMG", 33, 9, 100, 1.8, 60],
+  ["Desert Eagle", "Pistol", 50, 2.5, 7, 2, 30], ["M500", "Pistol", 60, 1.5, 5, 2, 30], ["USP", "Pistol", 22, 4, 12, 1.8, 25],
+  ["G18", "Pistol", 16, 12, 15, 1.8, 20], ["M1917", "Pistol", 55, 1.5, 6, 2, 30],
 ];
-const W = { damage: 1, rate: 2, mag: 3, hs: 4, range: 5 };
-let weapons = load("weapons", DEFAULT_WEAPONS);
+const W = { name: 0, cat: 1, damage: 2, rate: 3, mag: 4, hs: 5, range: 6 };
+const clone = (x) => JSON.parse(JSON.stringify(x));
+let weapons = load("weapons_v2", clone(DEFAULT_WEAPONS));
+function weaponOptions() {
+  return CATS.map((c) => {
+    const opts = weapons.map((w, i) => w[W.cat] === c ? `<option value="${i}">${esc(w[W.name])}</option>` : "").join("");
+    return opts ? `<optgroup label="${c}">${opts}</optgroup>` : "";
+  }).join("");
+}
 function fillWeaponSelects() {
-  ["d_weapon", "c_a", "c_b"].forEach((id, k) => {
+  const defaults = { d_weapon: "M1887", c_a: "MP40", c_b: "UMP" };
+  ["d_weapon", "c_a", "c_b"].forEach((id) => {
     const el = $(id), cur = el.value;
-    el.innerHTML = weapons.map((w, i) => `<option value="${i}">${esc(w[0])}</option>`).join("");
-    el.value = cur && weapons[cur] ? cur : String(k === 2 ? Math.min(1, weapons.length - 1) : 0);
+    el.innerHTML = weaponOptions();
+    if (cur && weapons[cur]) el.value = cur;
+    else { const i = weapons.findIndex((w) => w[W.name] === defaults[id]); el.value = String(i >= 0 ? i : 0); }
   });
 }
 const ARMOR = [1, 0.9, 0.8, 0.7]; // damage multiplier per armor level (approximate)
@@ -84,209 +185,344 @@ function distFactor(w, d) {
   if (d <= w[W.range]) return 1;
   return clamp(1 - 0.5 * ((d - w[W.range]) / w[W.range]), 0.5, 1);
 }
-$("d_go").onclick = () => {
+function renderDmg() {
+  syncRange($("d_dist"), (v) => v + " m");
   const w = weapons[+$("d_weapon").value];
   if (!w) return;
-  const d = Math.max(0, num("d_dist")), hp = Math.max(1, num("d_hp"));
+  const d = num("d_dist"), hp = Math.max(1, num("d_hp"));
   const f = distFactor(w, d);
-  const body = w[W.damage] * f * ARMOR[+$("d_vest").value];
-  const head = w[W.damage] * w[W.hs] * f * ARMOR[+$("d_helm").value];
-  const row = (label, dmg) => {
+  const card = (label, dot, dmg) => {
     const shots = Math.ceil(hp / dmg);
     const ttk = shots <= 1 ? 0 : (shots - 1) / w[W.rate];
     const ok = shots <= w[W.mag];
-    return `<tr><td>${label}</td><td>${dmg.toFixed(1)}</td><td>${shots}</td><td>${ttk.toFixed(2)}s</td><td class="${ok ? "ok" : "bad"}">${ok ? "1 mag" : "mag kam"}</td></tr>`;
+    return `<div class="dmg-card" style="--dot:${dot}">
+      <span class="tag">${label}</span>
+      <div class="val">${shots}</div><div class="sub">shots to kill</div>
+      <dl><dt>Per hit</dt><dd>${dmg.toFixed(1)}</dd><dt>TTK</dt><dd>${ttk.toFixed(2)}s</dd><dt>Magazine</dt>
+      <dd><span class="pill ${ok ? "ok" : "bad"}">${ok ? "1 mag kaafi" : "Reload chahiye"}</span></dd></dl>
+    </div>`;
   };
-  $("d_out").innerHTML = `<table><tr><th>Hit</th><th>Dmg</th><th>Shots to kill</th><th>TTK</th><th></th></tr>${row("Headshot", head)}${row("Body", body)}</table>
-    <p class="hint">Range falloff: ${Math.round((1 - f) * 100)}% reduction at ${d}m.</p>`;
-};
+  $("d_out").innerHTML = `<div class="dmg-grid">
+      ${card("Headshot", "var(--accent)", w[W.damage] * w[W.hs] * f * ARMOR[+radio("d_helm")])}
+      ${card("Body", "var(--info)", w[W.damage] * f * ARMOR[+radio("d_vest")])}
+    </div>
+    <div class="falloff">${esc(w[W.name])} · ${w[W.cat]} · effective range ${w[W.range]}m${f < 1 ? ` · <span class="pill bad">−${Math.round((1 - f) * 100)}% range falloff</span>` : ` · <span class="pill ok">Full damage</span>`}</div>`;
+}
+document.querySelectorAll("#dmg input, #dmg select").forEach((el) => el.addEventListener("input", renderDmg));
+
 function renderCompare() {
   const a = weapons[+$("c_a").value], b = weapons[+$("c_b").value];
   if (!a || !b) { $("c_out").innerHTML = ""; return; }
-  const dps = (w) => w[W.damage] * w[W.rate];
-  const stats = [["Damage", W.damage], ["Fire rate", W.rate], ["Magazine", W.mag], ["Headshot x", W.hs], ["Range (m)", W.range]];
-  let rows = stats.map(([l, i]) => {
-    const mx = Math.max(a[i], b[i]) || 1;
-    return `<tr><td>${l}</td><td>${a[i]}<div class="bar"><i style="width:${(a[i] / mx) * 100}%"></i></div></td><td>${b[i]}<div class="bar"><i style="width:${(b[i] / mx) * 100}%"></i></div></td></tr>`;
+  const dps = (w) => Math.round(w[W.damage] * w[W.rate]);
+  const stats = [["Damage", (w) => w[W.damage]], ["Fire rate", (w) => w[W.rate]], ["Magazine", (w) => w[W.mag]],
+    ["Headshot ×", (w) => w[W.hs]], ["Range", (w) => w[W.range]], ["DPS", dps]];
+  let scoreA = 0, scoreB = 0;
+  const rows = stats.map(([l, fn], i) => {
+    const va = fn(a), vb = fn(b), mx = Math.max(va, vb) || 1;
+    if (va > vb) scoreA++; else if (vb > va) scoreB++;
+    return `<div class="cmp-row" style="--i:${i}">
+      <div class="cmp-side a ${va > vb ? "win" : ""}"><b>${va}</b>${bar((va / mx) * 100)}</div>
+      <div class="lbl">${l}</div>
+      <div class="cmp-side ${vb > va ? "win" : ""}"><b>${vb}</b>${bar((vb / mx) * 100, "b")}</div></div>`;
   }).join("");
-  const da = dps(a), db = dps(b), mx = Math.max(da, db) || 1;
-  rows += `<tr><td>DPS</td><td>${da.toFixed(0)}<div class="bar"><i style="width:${(da / mx) * 100}%"></i></div></td><td>${db.toFixed(0)}<div class="bar"><i style="width:${(db / mx) * 100}%"></i></div></td></tr>`;
-  $("c_out").innerHTML = `<table><tr><th></th><th>${esc(a[0])}</th><th>${esc(b[0])}</th></tr>${rows}</table>`;
+  const winner = scoreA === scoreB ? "Dono barabar hain, apne playstyle ke hisaab se chuno."
+    : `<b>${esc((scoreA > scoreB ? a : b)[W.name])}</b> ${Math.max(scoreA, scoreB)}/${stats.length} stats mein aage hai.`;
+  $("c_out").innerHTML = `<div class="cmp-head"><div class="a"><span class="pill gold">${a[W.cat]}</span><b>${esc(a[W.name])}</b></div>
+    <div class="b"><span class="pill info">${b[W.cat]}</span><b>${esc(b[W.name])}</b></div></div>${rows}<div class="verdict">${winner}</div>`;
+  growBars($("c_out"));
 }
 function renderWeaponEditor() {
-  $("c_edit").innerHTML = `<div class="edit-row"><b>Name</b><b>Dmg</b><b>RPS</b><b>Mag</b><b>HS×</b><b>Range</b></div>` +
-    weapons.map((w, i) => `<div class="edit-row">${w.map((v, j) =>
-      `<input data-i="${i}" data-j="${j}" value="${esc(v)}" ${j ? 'type="number" step="any"' : ""}>`).join("")}</div>`).join("");
+  $("c_edit").innerHTML = `<div class="edit-row"><b>Name</b><b>Type</b><b>Dmg</b><b>RPS</b><b>Mag</b><b>HS×</b><b>Range</b></div>` +
+    weapons.map((w, i) => `<div class="edit-row">${w.map((v, j) => j === W.cat
+      ? `<select data-i="${i}" data-j="${j}">${CATS.map((c) => `<option ${c === v ? "selected" : ""}>${c}</option>`).join("")}</select>`
+      : `<input data-i="${i}" data-j="${j}" value="${esc(v)}" ${j ? 'type="number" step="any" inputmode="decimal"' : 'maxlength="20"'} aria-label="${esc(w[0])}">`).join("")}</div>`).join("");
 }
 $("c_edit").addEventListener("change", (e) => {
   const { i, j } = e.target.dataset;
   if (i === undefined) return;
-  weapons[i][j] = +j === 0 ? e.target.value.slice(0, 20) : Math.max(0.01, parseFloat(e.target.value) || 0.01);
-  save("weapons", weapons); fillWeaponSelects(); renderCompare();
+  const k = +j;
+  weapons[i][k] = k === W.name ? e.target.value.slice(0, 20) : k === W.cat ? e.target.value : Math.max(0.01, parseFloat(e.target.value) || 0.01);
+  save("weapons_v2", weapons); fillWeaponSelects(); renderCompare(); renderDmg();
 });
 $("c_reset").onclick = () => {
-  weapons = JSON.parse(JSON.stringify(DEFAULT_WEAPONS)); save("weapons", weapons);
-  fillWeaponSelects(); renderWeaponEditor(); renderCompare(); toast("Reset ho gaya");
+  weapons = clone(DEFAULT_WEAPONS); save("weapons_v2", weapons);
+  fillWeaponSelects(); renderWeaponEditor(); renderCompare(); renderDmg(); toast("Default values wapas aa gayi");
 };
 $("c_a").onchange = $("c_b").onchange = renderCompare;
-fillWeaponSelects(); renderWeaponEditor(); renderCompare();
+fillWeaponSelects(); renderWeaponEditor();
+onShow.dmg = renderDmg;
+onShow.cmp = renderCompare;
 
-/* ---------- Characters ---------- */
-const CHARS = {
-  rush: [["Hayato", "Armor penetration badhta hai, close fight mein strong."], ["Moco", "Hit karne pe enemy tag hota hai, push mein help."], ["Chrono", "Shield aur speed, aggressive push ke liye."]],
-  heal: [["Alok", "Healing aura aur speed boost."], ["Jota", "Kill/knock pe HP recover."], ["K", "EP aur HP conversion, long fights mein useful."]],
-  support: [["Alok", "Squad ko aura ka fayda milta hai."], ["Moco", "Enemy tag karke team ko info milti hai."], ["Kelly", "Sprint speed, team ke saath rotate karna easy."]],
-  mobility: [["Kelly", "Sprint speed badhti hai."], ["Alok", "Move speed boost."], ["Chrono", "Speed aur shield, zone mein rotate karne ke liye."]],
-  defense: [["Skyler", "Gloo walls todne mein help."], ["Steffie", "Gloo walls repair/strong karti hai."], ["Wukong", "Bush mein transform, hide aur ambush."]],
+/* ---------- Characters & pets ---------- */
+// [name, type, ability description, roles]
+const CHARS = [
+  ["Alok", "Active", "Drop the Beat: 5m aura jo HP restore karta hai aur movement speed badhata hai.", ["heal", "support", "mobility"]],
+  ["Chrono", "Active", "Time Turner: force field jo enemy ka damage block karta hai, saath mein speed boost.", ["rush", "defense"]],
+  ["K", "Active", "Master of All: Jiu-jitsu mode mein teammates ka EP conversion, Psychology mode mein EP se HP.", ["heal", "support"]],
+  ["Skyler", "Active", "Riptide Rhythm: sonic wave jo saamne ki gloo walls tod deti hai.", ["rush"]],
+  ["Wukong", "Active", "Camouflage: bush ban jao, chhupne aur ambush ke liye.", ["defense", "rush"]],
+  ["Steffie", "Active", "Painted Refuge: graffiti area mein throwable damage kam hota hai aur armor repair hota hai.", ["defense", "support"]],
+  ["A124", "Active", "Thrill of Battle: aas-paas ke enemies ki skills kuch der ke liye disable.", ["rush", "support"]],
+  ["Dimitri", "Active", "Healing Heartbeat: healing zone banata hai, knocked hone par khud uth sakte ho.", ["heal", "support"]],
+  ["Tatsuya", "Active", "Rebel Rush: aage ki taraf tez dash.", ["rush", "mobility"]],
+  ["Kenta", "Active", "Swordsman's Wrath: saamne shield wall jo aane wala damage kam karti hai.", ["defense"]],
+  ["Clu", "Active", "Tracing Steps: aas-paas ke enemies ki location dikhati hai.", ["support", "snipe"]],
+  ["Xayne", "Active", "Xtreme Encounter: temporary HP aur gloo walls/shields pe extra damage.", ["rush"]],
+  ["Kelly", "Passive", "Dash: sprinting speed badhti hai.", ["mobility"]],
+  ["Hayato", "Passive", "Bushido: HP jitna kam, armor penetration utna zyada.", ["rush"]],
+  ["Moco", "Passive", "Hacker's Eye: jis enemy ko shoot karo wo team ke liye kuch seconds tag rehta hai.", ["support", "rush", "snipe"]],
+  ["Jota", "Passive", "Sustained Raids: enemy knock ya kill karne pe HP recover.", ["heal", "rush"]],
+  ["Dasha", "Passive", "Partying On: recoil aur fall damage kam.", ["rush", "snipe"]],
+  ["Shirou", "Passive", "Damage Delivered: jo enemy aapko hit kare wo mark hota hai, agla shot extra armor penetration karta hai.", ["rush"]],
+  ["Maxim", "Passive", "Gluttony: medkit aur mushroom jaldi use hote hain.", ["heal"]],
+  ["Olivia", "Passive", "Healing Touch: revive kiye gaye teammate ko extra HP.", ["support", "heal"]],
+  ["Ford", "Passive", "Iron Will: safe zone ke bahar damage kam lagta hai.", ["mobility", "defense"]],
+  ["Andrew", "Passive", "Armor Specialist: vest durability kam ghatti hai.", ["defense"]],
+  ["Kla", "Passive", "Muay Thai: punch damage badhta hai.", ["rush"]],
+  ["Laura", "Passive", "Sharp Shooter: scope lagane pe accuracy badhti hai.", ["snipe"]],
+  ["Rafael", "Passive", "Dead Silent: sniper aur marksman shots silent ho jaate hain.", ["snipe"]],
+  ["Luqueta", "Passive", "Hat Trick: har kill pe max HP badhta hai.", ["rush", "heal"]],
+  ["Thiva", "Passive", "Vital Vibes: teammates ko jaldi revive karta hai.", ["support"]],
+  ["Miguel", "Passive", "Crazy Slayer: kill karne pe EP milta hai.", ["heal"]],
+  ["Antonio", "Passive", "Gangster's Spirit: har round ki shuruaat mein extra HP.", ["defense"]],
+  ["Joseph", "Passive", "Nutty Movement: damage lagne pe movement aur sprint speed badhti hai.", ["mobility"]],
+  ["Nikita", "Passive", "Firearms Expert: SMG jaldi reload hoti hai.", ["rush"]],
+];
+const PETS = [
+  ["Falco", "Pet", "Skyline Spree: squad ki gliding aur skydive speed badhti hai.", ["mobility"]],
+  ["Ottero", "Pet", "Double Blubber: medkit use karne pe EP bhi milta hai.", ["heal"]],
+  ["Mr. Waggor", "Pet", "Smooth Gloo: time ke saath gloo wall grenade banata hai.", ["defense"]],
+  ["Detective Panda", "Pet", "Panda's Blessings: kill karne pe HP restore.", ["rush", "heal"]],
+  ["Rockie", "Pet", "Stay Chill: active skill ka cooldown kam karta hai.", ["support"]],
+  ["Beaston", "Pet", "Helping Hand: grenades aur throwables door tak jaate hain.", ["support"]],
+  ["Robo", "Pet", "Wall Enforcement: gloo wall pe extra shield.", ["defense"]],
+  ["Dreki", "Pet", "Dragon Glare: medkit use kar rahe enemies ko spot karta hai.", ["snipe", "rush"]],
+];
+// Recommended loadout per role: 1 active + 3 passives + pet
+const COMBOS = {
+  rush: ["Chrono", "Hayato", "Jota", "Moco", "Detective Panda"],
+  heal: ["Alok", "Jota", "Maxim", "Luqueta", "Ottero"],
+  support: ["Dimitri", "Moco", "Olivia", "Thiva", "Rockie"],
+  mobility: ["Tatsuya", "Kelly", "Joseph", "Ford", "Falco"],
+  defense: ["Kenta", "Andrew", "Ford", "Antonio", "Mr. Waggor"],
+  snipe: ["Clu", "Laura", "Rafael", "Moco", "Dreki"],
 };
+const ROLE_NAMES = { rush: "Rush", heal: "Sustain", support: "Support", mobility: "Rotation", defense: "Defense", snipe: "Sniper" };
+const ALL = [...CHARS, ...PETS];
+const hue = (name) => [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 360, 7);
+const avatar = (n) => `<span class="avatar" style="--h:${hue(n)}">${esc(n.replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase())}</span>`;
+const typePill = (t) => `<span class="pill ${t === "Active" ? "gold" : t === "Pet" ? "violet" : "info"}">${t}</span>`;
 function renderChars() {
-  $("ch_out").innerHTML = CHARS[$("ch_role").value].map(([n, d], i) =>
-    `<div class="item"><div><b>${i === 0 ? "★ " : ""}${esc(n)}</b><br><small>${esc(d)}</small></div></div>`).join("");
+  const role = radio("ch_role"), q = ($("ch_q").value || "").trim().toLowerCase(), type = radio("ch_type");
+  const slots = ["Active skill", "Passive 1", "Passive 2", "Passive 3", "Pet"];
+  $("ch_best").innerHTML = `<div class="card-head"><h3 class="card-title">Best combo: ${ROLE_NAMES[role]}</h3></div><div class="combo">` +
+    COMBOS[role].map((n, i) => `<div class="slot ${i === 0 ? "active-slot" : ""}" style="--i:${i}">${avatar(n)}<b>${esc(n)}</b><small>${slots[i]}</small></div>`).join("") + "</div>";
+  const list = ALL.filter(([n, t, d, roles]) => (type === "all" || t === type) && (!q || n.toLowerCase().includes(q) || d.toLowerCase().includes(q)))
+    .sort((x, y) => (y[3].includes(role) - x[3].includes(role)));
+  $("ch_out").innerHTML = list.length ? list.map(([n, t, d, roles], i) => `<div class="char" style="--i:${Math.min(i, 20)}">${avatar(n)}
+      <div><h4>${esc(n)} ${typePill(t)}${roles.includes(role) ? '<span class="pill ok">Match</span>' : ""}</h4><p>${esc(d)}</p></div></div>`).join("")
+    : `<div class="empty card">${icon("chars")}Koi result nahi mila</div>`;
 }
-$("ch_role").onchange = renderChars; renderChars();
+(function setupChars() {
+  // extra controls for the full roster
+  $("ch_roles").insertAdjacentHTML("beforeend", `<label><input type="radio" name="ch_role" value="snipe"><span>Sniper</span></label>`);
+  $("ch_out").insertAdjacentHTML("beforebegin", `<div class="card char-best" id="ch_best"></div>
+    <div class="char-tools"><input id="ch_q" placeholder="Character ya ability search karo…" type="search">
+    <div class="chips">${["all", "Active", "Passive", "Pet"].map((t, i) => `<label><input type="radio" name="ch_type" value="${t}" ${i ? "" : "checked"}><span>${t === "all" ? "All" : t === "Pet" ? "Pets" : t}</span></label>`).join("")}</div></div>`);
+  document.querySelectorAll("#chars input").forEach((el) => el.addEventListener("input", renderChars));
+})();
+onShow.chars = renderChars;
 
 /* ---------- Match stats ---------- */
 let matches = load("matches", []);
-function renderStats() {
-  const n = matches.length;
-  const sum = (k) => matches.reduce((a, m) => a + m[k], 0);
+function statSummary() {
+  const n = matches.length, kills = matches.reduce((a, m) => a + m.kills, 0);
   const wins = matches.filter((m) => m.rank === 1).length;
-  const deaths = n - wins; // approximation: a non-win match ends with one death
-  const kd = n ? (sum("kills") / Math.max(1, deaths)).toFixed(2) : "0.00";
-  $("m_sum").innerHTML = [["Matches", n], ["Win %", n ? Math.round((wins / n) * 100) : 0], ["Avg kills", n ? (sum("kills") / n).toFixed(1) : "0.0"], ["K/D", kd]]
-    .map(([l, v]) => `<div class="card"><b>${v}</b><span>${l}</span></div>`).join("");
+  return { n, wins, kills, winRate: n ? (wins / n) * 100 : 0, avg: n ? kills / n : 0, kd: n ? kills / Math.max(1, n - wins) : 0 }; // a non-win match ends with one death
+}
+function kpis(el, items) {
+  if (el.children.length !== items.length) el.innerHTML = items.map(([l, , , hl]) => `<div class="kpi ${hl ? "hl" : ""}"><b>0</b><span>${l}</span></div>`).join("");
+  items.forEach(([, v, dec], i) => countUp(el.children[i].querySelector("b"), v, dec));
+}
+function renderStats() {
+  const s = statSummary();
+  kpis($("m_sum"), [["Matches", s.n, 0], ["Booyah %", s.winRate, 0, true], ["Avg kills", s.avg, 1], ["K/D", s.kd, 2, true]]);
   const last = matches.slice(-10);
   if (last.length) {
-    const mx = Math.max(1, ...last.map((m) => m.kills)), bw = 300 / 10;
-    $("m_chart").innerHTML = `<svg class="chart" viewBox="0 0 300 100" role="img" aria-label="Last matches kills">` + last.map((m, i) => {
-      const h = (m.kills / mx) * 70;
-      return `<rect x="${i * bw + 4}" y="${95 - h}" width="${bw - 8}" height="${h}" rx="3" fill="${m.rank === 1 ? "#4cc38a" : "#ff7a1a"}"/><text x="${i * bw + bw / 2}" y="${91 - h}" font-size="8" fill="#f3ece4" text-anchor="middle">${m.kills}</text>`;
-    }).join("") + `</svg><p class="hint">Last ${last.length} matches ke kills (green = Booyah)</p>`;
-  } else $("m_chart").innerHTML = "";
-  $("m_list").innerHTML = matches.slice(-10).reverse().map((m) => {
-    const idx = matches.indexOf(m);
-    return `<div class="item"><div>${esc(m.mode)} · Rank #${m.rank} · ${m.kills} kills · ${m.dmg} dmg<br><small>${esc(m.date)}</small></div><button class="x" data-del="${idx}" aria-label="Delete">✕</button></div>`;
-  }).join("");
+    const mx = Math.max(4, ...last.map((m) => m.kills)), W_ = 320, H = 150, bw = W_ / 10, base = H - 18;
+    const grid = [0.25, 0.5, 0.75, 1].map((p) => `<line x1="0" x2="${W_}" y1="${base - p * 110}" y2="${base - p * 110}" stroke="rgba(255,255,255,.06)" stroke-dasharray="3 4"/>`).join("");
+    $("m_chart").innerHTML = `<svg class="chart" viewBox="0 0 ${W_} ${H}" role="img" aria-label="Last matches kills">${grid}` + last.map((m, i) => {
+      const h = Math.max(3, (m.kills / mx) * 110), x = i * bw + 6;
+      const fill = m.rank === 1 ? "url(#g-win)" : "url(#g-accent)";
+      return `<rect class="col" style="--i:${i}" x="${x}" y="${base - h}" width="${bw - 12}" height="${h}" rx="5" fill="${fill}"/>
+        <text x="${x + (bw - 12) / 2}" y="${base - h - 6}" font-size="11" fill="#eef1f7" text-anchor="middle">${m.kills}</text>
+        <text x="${x + (bw - 12) / 2}" y="${H - 4}" font-size="9" fill="#5d6578" text-anchor="middle">#${matches.length - last.length + i + 1}</text>`;
+    }).join("") + `<defs><linearGradient id="g-win" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#059669"/><stop offset="1" stop-color="#34d399"/></linearGradient></defs></svg>
+      <p class="note"><span class="pill gold">Orange</span> normal match · <span class="pill ok">Green</span> Booyah</p>`;
+  } else $("m_chart").innerHTML = `<div class="empty">${icon("stats")}Pehla match save karo, graph yahan dikhega</div>`;
+  $("m_list").innerHTML = matches.length ? matches.slice(-15).reverse().map((m, i) => {
+    const idx = matches.indexOf(m), cls = m.rank === 1 ? "gold" : m.rank === 2 ? "silver" : m.rank === 3 ? "bronze" : "";
+    return `<div class="item" style="--i:${i}"><span class="badge ${cls}">#${m.rank}</span>
+      <div class="grow"><div class="title">${m.kills} kills · ${m.dmg} dmg <span class="pill mute">${esc(m.mode)}</span>${m.rank === 1 ? '<span class="pill gold">Booyah!</span>' : ""}</div>
+      <div class="meta">${esc(m.date)}</div></div>
+      <button class="icon-btn danger" data-del="${idx}" aria-label="Delete">${icon("trash")}</button></div>`;
+  }).join("") : `<div class="empty">${icon("stats")}Abhi koi match save nahi hai</div>`;
 }
 $("m_add").onclick = () => {
-  matches.push({ mode: $("m_mode").value, kills: Math.max(0, Math.floor(num("m_kills"))), dmg: Math.max(0, Math.floor(num("m_dmg"))), rank: Math.max(1, Math.floor(num("m_rank"))), date: new Date().toLocaleString() });
-  save("matches", matches); renderStats(); toast("Match add ho gaya");
+  matches.push({ mode: radio("m_mode"), kills: Math.max(0, Math.floor(num("m_kills"))), dmg: Math.max(0, Math.floor(num("m_dmg"))), rank: Math.max(1, Math.floor(num("m_rank"))), date: new Date().toLocaleString() });
+  save("matches", matches); renderStats(); toast(matches.at(-1).rank === 1 ? "Booyah! Match save ho gaya" : "Match save ho gaya");
 };
-$("m_list").onclick = (e) => { const i = e.target.dataset.del; if (i !== undefined) { matches.splice(+i, 1); save("matches", matches); renderStats(); } };
-$("m_clear").onclick = () => { if (confirm("Saare matches delete karne hain?")) { matches = []; save("matches", matches); renderStats(); } };
+$("m_list").onclick = (e) => { const b = e.target.closest("[data-del]"); if (b) { matches.splice(+b.dataset.del, 1); save("matches", matches); renderStats(); } };
+$("m_clear").onclick = () => { if (matches.length && confirm("Saare matches delete karne hain?")) { matches = []; save("matches", matches); renderStats(); } };
 $("m_export").onclick = () => {
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([JSON.stringify(matches, null, 2)], { type: "application/json" }));
-  a.download = "ff-matches.json"; a.click(); URL.revokeObjectURL(a.href);
+  a.download = "ff-matches.json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
 $("m_import").onchange = async (e) => {
   try {
     const data = JSON.parse(await e.target.files[0].text());
     if (!Array.isArray(data)) throw 0;
-    matches = data.map((m) => ({ mode: String(m.mode || "BR").slice(0, 10), kills: Math.max(0, +m.kills || 0), dmg: Math.max(0, +m.dmg || 0), rank: Math.max(1, +m.rank || 1), date: String(m.date || "") }));
-    save("matches", matches); renderStats(); toast("Import ho gaya");
-  } catch { toast("File sahi nahi hai"); }
+    matches = data.map((m) => ({ mode: String(m.mode || "BR").slice(0, 10), kills: Math.max(0, +m.kills || 0), dmg: Math.max(0, +m.dmg || 0), rank: Math.max(1, +m.rank || 1), date: String(m.date || "").slice(0, 40) }));
+    save("matches", matches); renderStats(); toast(`${matches.length} matches import ho gaye`);
+  } catch { toast("File sahi nahi hai", false); }
   e.target.value = "";
 };
-renderStats();
+onShow.stats = renderStats;
 
 /* ---------- Tournament ---------- */
 const PLACE_PTS = [12, 9, 8, 7, 6, 5, 4, 3, 2, 1];
 let tour = load("tour", { teams: [] }); // teams: {name, results:[{place,kills}]}
-function teamPts(t) { return t.results.reduce((a, r) => a + (PLACE_PTS[r.place - 1] || 0) + r.kills, 0); }
+const teamPts = (t) => t.results.reduce((a, r) => a + (PLACE_PTS[r.place - 1] || 0) + r.kills, 0);
 function renderTour() {
-  $("t_sel").innerHTML = tour.teams.map((t, i) => `<option value="${i}">${esc(t.name)}</option>`).join("");
+  const sel = $("t_sel"), cur = sel.value;
+  sel.innerHTML = tour.teams.map((t, i) => `<option value="${i}">${esc(t.name)}</option>`).join("");
+  if (tour.teams[cur]) sel.value = cur;
   const rows = tour.teams.map((t) => ({ t, pts: teamPts(t), kills: t.results.reduce((a, r) => a + r.kills, 0), wins: t.results.filter((r) => r.place === 1).length }))
     .sort((a, b) => b.pts - a.pts || b.kills - a.kills);
-  $("t_table").innerHTML = rows.length ? `<table><tr><th>#</th><th>Team</th><th>M</th><th>Wins</th><th>Kills</th><th>Pts</th></tr>${rows.map((r, i) =>
-    `<tr><td>${i + 1}</td><td>${esc(r.t.name)}</td><td>${r.t.results.length}</td><td>${r.wins}</td><td>${r.kills}</td><td><b>${r.pts}</b></td></tr>`).join("")}</table>` : '<p class="hint">Pehle team add karo.</p>';
+  const medal = ["gold", "silver", "bronze"];
+  $("t_table").innerHTML = rows.length ? `<table class="lb"><tr><th>#</th><th>Team</th><th>M</th><th>Booyah</th><th>Kills</th><th>Pts</th></tr>${rows.map((r, i) =>
+    `<tr style="--i:${i}"><td><span class="badge ${medal[i] || ""}">${i + 1}</span></td><td>${esc(r.t.name)}</td><td>${r.t.results.length}</td><td>${r.wins}</td><td>${r.kills}</td><td>${r.pts}</td></tr>`).join("")}</table>`
+    : `<div class="empty">${icon("tour")}Pehle teams add karo</div>`;
 }
 $("t_add_team").onclick = () => {
   const name = $("t_team").value.trim().slice(0, 24);
-  if (!name) return toast("Team name likho");
+  if (!name) return toast("Team ka naam likho", false);
+  if (tour.teams.some((t) => t.name.toLowerCase() === name.toLowerCase())) return toast("Ye team pehle se hai", false);
   tour.teams.push({ name, results: [] }); $("t_team").value = ""; save("tour", tour); renderTour();
+  $("t_sel").value = String(tour.teams.length - 1); toast(`${name} add ho gayi`);
 };
+$("t_team").addEventListener("keydown", (e) => { if (e.key === "Enter") $("t_add_team").click(); });
 $("t_add_res").onclick = () => {
   const t = tour.teams[+$("t_sel").value];
-  if (!t) return toast("Pehle team add karo");
+  if (!t) return toast("Pehle team add karo", false);
   t.results.push({ place: Math.max(1, Math.floor(num("t_place"))), kills: Math.max(0, Math.floor(num("t_kills"))) });
-  save("tour", tour); renderTour(); toast("Result add ho gaya");
+  save("tour", tour); renderTour(); toast(`${t.name}: result add ho gaya`);
 };
-$("t_clear").onclick = () => { if (confirm("Poora tournament reset karna hai?")) { tour = { teams: [] }; save("tour", tour); renderTour(); } };
-renderTour();
+$("t_clear").onclick = () => { if (tour.teams.length && confirm("Poora tournament reset karna hai?")) { tour = { teams: [] }; save("tour", tour); renderTour(); } };
+onShow.tour = renderTour;
 
 /* ---------- Diamond budget ---------- */
 let goals = load("goals", []);
 function renderBudget() {
   const have = Math.max(0, num("b_have")), rate = Math.max(0, num("b_rate"));
-  const total = goals.reduce((a, g) => a + g.cost, 0);
-  const need = Math.max(0, total - have);
-  $("b_out").innerHTML = goals.map((g, i) => `<div class="item"><div>${esc(g.name)}<br><small>${g.cost} diamonds</small></div><button class="x" data-del="${i}" aria-label="Delete">✕</button></div>`).join("") +
-    `<div class="cards" style="grid-template-columns:repeat(3,1fr)"><div class="card"><b>${total}</b><span>Total goals</span></div><div class="card"><b>${need}</b><span>Aur chahiye</span></div><div class="card"><b>${(need / 100 * rate).toFixed(0)}</b><span>Approx cost</span></div></div>`;
+  const total = goals.reduce((a, g) => a + g.cost, 0), need = Math.max(0, total - have);
+  const pct = total ? Math.min(100, (have / total) * 100) : 0;
+  if (!$("b_ring")) {
+    $("b_sum").innerHTML = `<div class="progress-ring"><div class="ring" id="b_ring"><svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="42"/><circle class="val" cx="50" cy="50" r="42"/></svg><b><span id="b_pct">0</span>%</b></div>
+      <div class="ring-info"><div>Total goals: <b id="b_total">0</b> 💎</div><div>Aur chahiye: <b id="b_need">0</b> 💎</div><div>Approx cost: <b id="b_cost_v">0</b></div></div></div>`;
+  }
+  requestAnimationFrame(() => { $("b_ring").querySelector(".val").style.strokeDashoffset = 264 - (264 * pct) / 100; });
+  countUp($("b_pct"), pct); countUp($("b_total"), total); countUp($("b_need"), need); countUp($("b_cost_v"), (need / 100) * rate);
+  let running = have;
+  $("b_out").innerHTML = goals.length ? goals.map((g, i) => {
+    const ok = running >= g.cost; running -= g.cost;
+    return `<div class="item" style="--i:${i}"><span class="badge">💎</span><div class="grow"><div class="title">${esc(g.name)} ${ok ? '<span class="pill ok">Afford kar sakte ho</span>' : '<span class="pill mute">Pending</span>'}</div>
+      <div class="meta">${g.cost.toLocaleString()} diamonds</div></div><button class="icon-btn danger" data-del="${i}" aria-label="Delete">${icon("trash")}</button></div>`;
+  }).join("") : `<div class="empty">${icon("budget")}Koi goal nahi. Upar se add karo.</div>`;
 }
-["b_have", "b_rate"].forEach((id) => $(id).addEventListener("input", () => { save("b_" + id, $(id).value); renderBudget(); }));
-["b_have", "b_rate"].forEach((id) => { const v = load("b_" + id, null); if (v !== null) $(id).value = v; });
+["b_have", "b_rate"].forEach((id) => {
+  const v = load("b_" + id, null); if (v !== null) $(id).value = v;
+  $(id).addEventListener("input", () => { save("b_" + id, $(id).value); renderBudget(); });
+});
 $("b_add").onclick = () => {
   const name = $("b_name").value.trim().slice(0, 40), cost = Math.max(0, Math.floor(num("b_cost")));
-  if (!name || !cost) return toast("Naam aur diamonds dono daalo");
-  goals.push({ name, cost }); save("goals", goals); $("b_name").value = ""; $("b_cost").value = ""; renderBudget();
+  if (!name || !cost) return toast("Naam aur diamonds dono daalo", false);
+  goals.push({ name, cost }); save("goals", goals); $("b_name").value = ""; $("b_cost").value = ""; renderBudget(); toast("Goal add ho gaya");
 };
-$("b_out").onclick = (e) => { const i = e.target.dataset.del; if (i !== undefined) { goals.splice(+i, 1); save("goals", goals); renderBudget(); } };
-renderBudget();
+$("b_out").onclick = (e) => { const b = e.target.closest("[data-del]"); if (b) { goals.splice(+b.dataset.del, 1); save("goals", goals); renderBudget(); } };
+onShow.budget = renderBudget;
 
 /* ---------- Name generator ---------- */
 const range = (start, base) => (c) => String.fromCodePoint(start + c.charCodeAt(0) - base);
 const alphaMap = (up, low) => (s) => [...s].map((c) => /[A-Z]/.test(c) ? up(c) : /[a-z]/.test(c) ? low(c) : c).join("");
 const SMALL_CAPS = { a: "ᴀ", b: "ʙ", c: "ᴄ", d: "ᴅ", e: "ᴇ", f: "ꜰ", g: "ɢ", h: "ʜ", i: "ɪ", j: "ᴊ", k: "ᴋ", l: "ʟ", m: "ᴍ", n: "ɴ", o: "ᴏ", p: "ᴘ", q: "ǫ", r: "ʀ", s: "s", t: "ᴛ", u: "ᴜ", v: "ᴠ", w: "ᴡ", x: "x", y: "ʏ", z: "ᴢ" };
 const STYLES = [
-  alphaMap(range(0x1d4d0, 65), range(0x1d4ea, 97)),           // bold script
-  alphaMap(range(0x1d56c, 65), range(0x1d586, 97)),           // bold fraktur
-  alphaMap(range(0x1d5d4, 65), range(0x1d5ee, 97)),           // sans bold
-  alphaMap(range(0x1d670, 65), range(0x1d68a, 97)),           // monospace
-  alphaMap(range(0x24b6, 65), range(0x24d0, 97)),             // circled
-  alphaMap(range(0xff21, 65), range(0xff41, 97)),             // fullwidth
+  alphaMap(range(0x1d4d0, 65), range(0x1d4ea, 97)),   // bold script
+  alphaMap(range(0x1d56c, 65), range(0x1d586, 97)),   // bold fraktur
+  alphaMap(range(0x1d5d4, 65), range(0x1d5ee, 97)),   // sans bold
+  alphaMap(range(0x1d468, 65), range(0x1d482, 97)),   // serif bold italic
+  alphaMap(range(0x1d670, 65), range(0x1d68a, 97)),   // monospace
+  alphaMap(range(0x24b6, 65), range(0x24d0, 97)),     // circled
+  alphaMap(range(0xff21, 65), range(0xff41, 97)),     // fullwidth
   (s) => [...s.toLowerCase()].map((c) => SMALL_CAPS[c] || c).join(""),
 ];
-const DECOR = [(s) => `꧁${s}꧂`, (s) => `༒${s}༒`, (s) => `☠ ${s} ☠`, (s) => `『${s}』`, (s) => `⚡${s}⚡`];
+const DECOR = [(s) => `꧁${s}꧂`, (s) => `༒${s}༒`, (s) => `☠ ${s} ☠`, (s) => `『${s}』`, (s) => `⚡${s}⚡`, (s) => `★彡${s}彡★`, (s) => `×͜×${s}`, (s) => `ᴳᵒᵈ ${s}`];
+let nameList = [];
 function renderNames() {
-  const src = $("n_in").value.trim();
-  if (!src) { $("n_out").innerHTML = ""; return; }
-  const out = [];
-  STYLES.forEach((f, i) => { const s = f(src); out.push(s); out.push(DECOR[i % DECOR.length](s)); });
-  $("n_out").innerHTML = out.map((s, i) => `<div class="name"><span>${esc(s)}</span><button class="btn small ghost" data-copy="${i}">Copy</button></div>`).join("");
-  $("n_out")._list = out;
+  const src = $("n_in").value.trim() || "Player";
+  nameList = [];
+  STYLES.forEach((f, i) => { const s = f(src); nameList.push(s, DECOR[i % DECOR.length](s)); });
+  $("n_out").innerHTML = nameList.map((s, i) => `<div class="name" style="--i:${i}"><span>${esc(s)}</span><button class="icon-btn" data-copy="${i}" aria-label="Copy">${icon("copy")}</button></div>`).join("");
 }
 $("n_in").oninput = renderNames;
-$("n_out").onclick = (e) => { const i = e.target.dataset.copy; if (i !== undefined) copy($("n_out")._list[+i]); };
+$("n_out").onclick = (e) => { const b = e.target.closest("[data-copy]"); if (b) copy(nameList[+b.dataset.copy], b); };
+onShow.names = renderNames;
 
 /* ---------- Redeem codes ---------- */
 let codes = load("codes", []);
 function renderCodes() {
   const today = new Date().toISOString().slice(0, 10);
-  $("r_list").innerHTML = codes.map((c, i) => {
+  $("r_list").innerHTML = codes.length ? codes.map((c, i) => {
     const exp = c.exp && c.exp < today;
-    return `<div class="item"><div style="${c.used || exp ? "opacity:.5" : ""}"><b>${esc(c.code)}</b><br><small>${c.used ? "Used" : exp ? "Expired" : c.exp ? "Expires " + esc(c.exp) : "No expiry set"}</small></div>
-      <div class="row" style="margin:0"><button class="btn small ghost" data-copy="${i}">Copy</button><button class="btn small ghost" data-use="${i}">${c.used ? "Undo" : "Used"}</button><button class="x" data-del="${i}" aria-label="Delete">✕</button></div></div>`;
-  }).join("") || '<p class="hint">Koi code save nahi hai.</p>';
+    const status = c.used ? '<span class="pill mute">Used</span>' : exp ? '<span class="pill bad">Expired</span>' : '<span class="pill ok">Active</span>';
+    return `<div class="item ${c.used || exp ? "dim" : ""}" style="--i:${i}"><span class="badge">${icon("codes")}</span>
+      <div class="grow"><div class="title"><span style="font-family:var(--display);letter-spacing:1px">${esc(c.code)}</span> ${status}</div>
+      <div class="meta">${c.exp ? (exp ? "Expired " : "Expires ") + esc(c.exp) : "Expiry set nahi hai"}</div></div>
+      <div class="actions"><button class="icon-btn" data-copy="${i}" aria-label="Copy">${icon("copy")}</button>
+      <button class="icon-btn" data-use="${i}" aria-label="${c.used ? "Mark unused" : "Mark used"}">${icon(c.used ? "undo" : "check")}</button>
+      <button class="icon-btn danger" data-del="${i}" aria-label="Delete">${icon("trash")}</button></div></div>`;
+  }).join("") : `<div class="empty">${icon("codes")}Koi code save nahi hai</div>`;
 }
 $("r_add").onclick = () => {
   const code = $("r_code").value.trim().toUpperCase();
-  if (!/^[A-Z0-9]{6,20}$/.test(code)) return toast("Code sirf letters/numbers (6-20) hona chahiye");
-  codes.push({ code, exp: $("r_exp").value, used: false }); save("codes", codes);
-  $("r_code").value = ""; $("r_exp").value = ""; renderCodes();
+  if (!/^[A-Z0-9]{6,20}$/.test(code)) return toast("Code mein sirf 6-20 letters/numbers", false);
+  if (codes.some((c) => c.code === code)) return toast("Ye code pehle se saved hai", false);
+  codes.unshift({ code, exp: $("r_exp").value, used: false }); save("codes", codes);
+  $("r_code").value = ""; $("r_exp").value = ""; renderCodes(); toast("Code save ho gaya");
 };
 $("r_list").onclick = (e) => {
-  const d = e.target.dataset;
+  const b = e.target.closest("button"); if (!b) return;
+  const d = b.dataset;
+  if (d.copy !== undefined) return copy(codes[+d.copy].code, b);
   if (d.del !== undefined) codes.splice(+d.del, 1);
   else if (d.use !== undefined) codes[+d.use].used = !codes[+d.use].used;
-  else if (d.copy !== undefined) return copy(codes[+d.copy].code);
   else return;
   save("codes", codes); renderCodes();
 };
-renderCodes();
+onShow.codes = renderCodes;
+
+/* ---------- Home ---------- */
+onShow.home = () => {
+  const s = statSummary(), today = new Date().toISOString().slice(0, 10);
+  const active = codes.filter((c) => !c.used && !(c.exp && c.exp < today)).length;
+  kpis($("homeStats"), [["Matches", s.n, 0], ["K/D", s.kd, 2, true], ["Active codes", active, 0]]);
+};
 
 /* ---------- PWA ---------- */
 let deferredPrompt;
 window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; $("installBtn").hidden = false; });
 $("installBtn").onclick = async () => { if (!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; $("installBtn").hidden = true; };
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
+
+route();

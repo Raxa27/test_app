@@ -8,8 +8,8 @@ Free Fire players ke liye ek hi app mein saare tools. Ye web app (PWA) ke roop m
 | --- | --- |
 | Sensitivity | Screen size, RAM, playstyle aur fingers ke hisaab se General, Red Dot, 2x, 4x, AWM aur Free Look sensitivity suggest karta hai |
 | Damage | Weapon, distance aur armor ke hisaab se headshot ya body damage, shots to kill aur TTK nikalta hai |
-| Weapons | Do guns ki stats side by side compare karta hai. Weapon data app mein hi edit ho sakta hai |
-| Characters | Role ke hisaab se character suggest karta hai |
+| Weapons | 40 guns (SMG, AR, Shotgun, Marksman, Sniper, LMG, Pistol) ki stats side by side compare karta hai. Weapon data app mein hi edit ho sakta hai |
+| Characters | 31 characters aur 8 pets, search aur filter ke saath. Role ke hisaab se best combo (1 active + 3 passive + pet) |
 | Stats | Match log karta hai (kills, damage, rank) aur Win %, K/D, avg kills aur graph dikhata hai. JSON export/import bhi hai |
 | Tournament | Teams aur match results add karo, points table (placement + kills) apne aap banti hai |
 | Diamonds | Diamond goals aur kitne aur chahiye, uska approx cost |
