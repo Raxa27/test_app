@@ -5,8 +5,8 @@ Open http://localhost:8000 in Chrome or Edge, tap the orb, and speak.
 Environment variables:
   ANTHROPIC_API_KEY    your Claude API key
   ASSISTANT_PASSWORD   optional; required when the server is reachable from other devices
-  ASSISTANT_HOST       default 127.0.0.1 (use 0.0.0.0 to allow your phone on the same network)
-  ASSISTANT_PORT       default 8000
+  ASSISTANT_HOST       default 127.0.0.1, or 0.0.0.0 when PORT is set (cloud hosts like Railway)
+  ASSISTANT_PORT       default $PORT if set, else 8000
 """
 
 import hmac
@@ -111,8 +111,9 @@ class Handler(BaseHTTPRequestHandler):
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
-    host = os.environ.get("ASSISTANT_HOST", "127.0.0.1")
-    port = int(os.environ.get("ASSISTANT_PORT", "8000"))
+    cloud_port = os.environ.get("PORT")  # set by Railway and similar hosts
+    host = os.environ.get("ASSISTANT_HOST", "0.0.0.0" if cloud_port else "127.0.0.1")
+    port = int(os.environ.get("ASSISTANT_PORT") or cloud_port or "8000")
     if host not in ("127.0.0.1", "localhost") and not PASSWORD:
         raise SystemExit("Set ASSISTANT_PASSWORD before exposing the assistant to other devices.")
     server = ThreadingHTTPServer((host, port), Handler)

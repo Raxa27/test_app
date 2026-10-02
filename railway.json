@@ -1,0 +1,8 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "deploy": {
+    "startCommand": "python -m assistant.voice_server",
+    "healthcheckPath": "/api/config",
+    "restartPolicyType": "ON_FAILURE"
+  }
+}

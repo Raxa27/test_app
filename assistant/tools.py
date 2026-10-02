@@ -1,19 +1,23 @@
 """Tools the assistant can use: notes, to-dos, expenses, reminders, and files."""
 
+import os
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
+from zoneinfo import ZoneInfo
 
 from anthropic import beta_tool
 
 from . import storage
 
 WORKSPACE = storage.DATA_DIR / "files"
+# Cloud servers usually run on UTC; set e.g. ASSISTANT_TIMEZONE=Asia/Karachi so times match the user's clock.
+TIMEZONE = ZoneInfo(os.environ["ASSISTANT_TIMEZONE"]) if os.environ.get("ASSISTANT_TIMEZONE") else None
 
 
 def _now() -> datetime:
-    return datetime.now().astimezone()
+    return datetime.now(TIMEZONE) if TIMEZONE else datetime.now().astimezone()
 
 
 @beta_tool
@@ -230,7 +234,7 @@ def cancel_reminder(reminder_id: int) -> str:
 def pop_due_reminders() -> list[dict]:
     """Return reminders whose time has come and mark them sent. Used by the CLI and Telegram bot."""
     reminders = storage.load("reminders")
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    now = _now().strftime("%Y-%m-%d %H:%M")
     due = [r for r in reminders if not r["sent"] and r["when"] <= now]
     if due:
         for r in due:

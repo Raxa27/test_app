@@ -20,6 +20,8 @@ Ek AI agent jo aapke kehne par rozana ke kaam karta hai. Urdu, Roman Urdu, Hindi
 
 Aapka saara data (notes, kharcha, reminders, files) aapke computer par `data/` folder mein rehta hai.
 
+> 📱 **Phone par computer ke baghair chalana hai ya APK banani hai?** [DEPLOY.md](DEPLOY.md) dekhein (Railway setup + APK).
+
 ## Setup (ek dafa)
 
 1. Python 3.10+ install karein.
@@ -126,6 +128,8 @@ Reminders bhi Telegram par aayenge, lekin sirf tab jab bot chal raha ho. Bot ko 
 | `ASSISTANT_MODEL` | `claude-opus-5-5` | Kaunsa Claude model istemal ho |
 | `ASSISTANT_EFFORT` | `medium` | `low` = tez aur sasta, `high` = zyada soch kar jawab |
 | `ASSISTANT_DATA_DIR` | `./data` | Data kahan save ho |
+| `ASSISTANT_TIMEZONE` | computer ka time zone | Misaal `Asia/Karachi`; server par reminders sahi waqt par bajane ke liye |
+| `ASSISTANT_PASSWORD` | (khaali) | App kholne ka password; online server par zaroori |
 
 ## Code
 
