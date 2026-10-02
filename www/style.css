@@ -453,3 +453,64 @@ textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba
 .drill input:checked~.grow .title{text-decoration:line-through;color:var(--muted)}
 .drill input:focus-visible+.tick{outline:2px solid var(--accent);outline-offset:2px}
 #dr_list input:checked+span{background:var(--bg-2);color:var(--text);border-color:rgba(74,222,128,.45);box-shadow:none}
+
+/* ---------- Home categories & nav ---------- */
+.section-label span{display:inline-grid;place-items:center;min-width:22px;height:20px;padding:0 6px;margin-left:6px;border-radius:999px;background:var(--surface-3);color:var(--muted);font-size:.7rem;letter-spacing:0}
+#toolGrid .section-label{margin-top:22px}
+#toolGrid .section-label:first-child{margin-top:0}
+.nav-head{display:none}
+@media (min-width:960px){.nav-head{display:block;padding:12px 12px 4px;font-size:.68rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--faint)}}
+
+/* ---------- Practice planner ---------- */
+.drill-head{display:flex;align-items:center;gap:12px;padding:4px 0 6px}
+.drill-head .bar{flex:1;height:10px}
+.drill-head span{font:700 1.05rem var(--display);color:var(--accent-2);font-variant-numeric:tabular-nums}
+.sub-head{margin:16px 0 2px;font:700 .72rem var(--font);text-transform:uppercase;letter-spacing:1.2px;color:var(--muted)}
+.drill .btn-sm{flex:none}
+
+/* ---------- Training games ---------- */
+.pop-text{position:absolute;transform:translate(-50%,-120%);font:700 1rem var(--display);letter-spacing:.8px;pointer-events:none;white-space:nowrap;animation:floatup .7s var(--ease) forwards}
+.pop-text.hs{color:#fde047;text-shadow:0 0 12px rgba(253,224,71,.7)}
+.pop-text.body{color:#93c5fd}
+.pop-text.miss{color:var(--bad)}
+@keyframes floatup{from{opacity:1;transform:translate(-50%,-120%)}to{opacity:0;transform:translate(-50%,-260%)}}
+
+.enemy{position:absolute;width:44px;height:96px;animation:pop .25s var(--ease)}
+.enemy.strafe{animation:pop .25s var(--ease),strafe 1.6s ease-in-out .25s infinite alternate}
+@keyframes strafe{from{margin-left:-34px}to{margin-left:34px}}
+.e-head{position:absolute;left:11px;top:0;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fecaca,#ef4444);box-shadow:0 0 0 2px rgba(239,68,68,.35),0 0 16px rgba(239,68,68,.5)}
+.e-body{position:absolute;left:2px;top:26px;width:40px;height:70px;border-radius:14px 14px 8px 8px;background:linear-gradient(180deg,#475569,#1e293b);border:1px solid rgba(255,255,255,.12)}
+.enemy.down{opacity:0;transform:translateY(16px) rotate(-12deg);transition:all .35s var(--ease)}
+.xhair{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:2px solid #fde047;pointer-events:none;box-shadow:0 0 10px rgba(253,224,71,.6)}
+.xhair::before,.xhair::after{content:"";position:absolute;background:#fde047}
+.xhair::before{left:50%;top:-8px;bottom:-8px;width:2px;margin-left:-1px}
+.xhair::after{top:50%;left:-8px;right:-8px;height:2px;margin-top:-1px}
+
+.track-target{position:absolute;left:0;top:0;width:48px;height:48px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,#fff 0 12%,#f97316 13% 45%,rgba(249,115,22,.25) 46%);box-shadow:0 0 24px rgba(249,115,22,.6);transition:background .15s,box-shadow .15s}
+.track-target.on{background:radial-gradient(circle,#fff 0 12%,#22c55e 13% 45%,rgba(34,197,94,.3) 46%);box-shadow:0 0 30px rgba(34,197,94,.8)}
+
+.tap-pad[data-state="go"]{background:linear-gradient(160deg,#a21caf,#581c87);border-color:#e879f9}
+.tap-pad .react-big{font-variant-numeric:tabular-nums}
+
+.peek-arena .cover{position:absolute;left:50%;top:8%;bottom:8%;width:34%;transform:translateX(-50%);border-radius:10px;
+  background:repeating-linear-gradient(0deg,#3f3a33 0 18px,#35302a 18px 36px);border:1px solid rgba(255,255,255,.08);box-shadow:inset 0 0 30px rgba(0,0,0,.5)}
+.peeker{position:absolute;width:40px;height:62px;border:0;padding:0;border-radius:20px 20px 8px 8px;cursor:crosshair;
+  background:radial-gradient(circle at 50% 22%,#fecaca 0 9px,#ef4444 10px 13px,transparent 14px),linear-gradient(180deg,transparent 0 24px,#475569 24px);
+  transition:transform .12s var(--ease),opacity .2s}
+.peeker.l{left:calc(33% - 34px);animation:peekL .14s var(--ease)}
+.peeker.r{left:calc(67% - 6px);animation:peekR .14s var(--ease)}
+@keyframes peekL{from{transform:translateX(30px)}to{transform:none}}
+@keyframes peekR{from{transform:translateX(-30px)}to{transform:none}}
+.peeker.gone{opacity:0}
+.peeker.hit{opacity:0;transform:scale(1.4)}
+
+.spot-arena{display:grid;place-items:center}
+.spot-grid{display:grid;gap:6px;width:min(100%,380px);aspect-ratio:1;padding:10px;animation:pop .25s var(--ease)}
+.tile{border:0;border-radius:8px;cursor:pointer;padding:0;min-width:0;transition:transform .1s}
+.tile:active{transform:scale(.92)}
+.tile.wrong{outline:3px solid var(--bad)}
+.tile.reveal{outline:3px solid #fde047}
+.dmg-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.dmg-card{min-width:0}
+.dmg-card .pill{white-space:normal;text-align:right}

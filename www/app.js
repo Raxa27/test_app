@@ -77,29 +77,40 @@ function syncRange(el, fmt) {
 
 /* ---------- Tools & routing ---------- */
 const TOOLS = [
-  { id: "sens", name: "Sensitivity", sub: "Settings tuned to your device and playstyle", color: "#ff8a1f" },
-  { id: "gfx", name: "Graphics Settings", sub: "Graphics, FPS and shadow setup for your phone", color: "#c084fc" },
-  { id: "dmg", name: "Damage Calculator", sub: "Headshot and body damage, shots to kill, TTK", color: "#f87171" },
-  { id: "cmp", name: "Weapon Compare", sub: "Any two guns, stat by stat", color: "#60a5fa" },
-  { id: "chars", name: "Character Combo", sub: "Best skills and pet for your role", color: "#a78bfa" },
-  { id: "aim", name: "Aim Trainer", sub: "30-second tap drill for speed and accuracy", color: "#fb7185" },
-  { id: "react", name: "Reaction Test", sub: "Measure your reaction time in milliseconds", color: "#facc15" },
-  { id: "stats", name: "Match Stats", sub: "Kills, K/D, Booyah rate and progress", color: "#34d399" },
-  { id: "tour", name: "Tournament", sub: "Points table for custom rooms", color: "#ffbe2e" },
-  { id: "teams", name: "Team Maker", sub: "Random teams and roles for custom rooms", color: "#38bdf8" },
-  { id: "drop", name: "Drop Spot Picker", sub: "Random Bermuda landing spot for your squad", color: "#4ade80" },
-  { id: "practice", name: "Practice Planner", sub: "Daily drills and a practice streak", color: "#2dd4bf" },
-  { id: "budget", name: "Diamond Planner", sub: "Plan your diamond goals and top-ups", color: "#22d3ee" },
-  { id: "names", name: "Stylish Names", sub: "Nicknames with fancy fonts and symbols", color: "#f472b6" },
+  { id: "sens", cat: "setup", name: "Sensitivity", sub: "Settings tuned to your device and playstyle", color: "#ff8a1f" },
+  { id: "gfx", cat: "setup", name: "Graphics Settings", sub: "Graphics, FPS and shadow setup for your phone", color: "#c084fc" },
+  { id: "dmg", cat: "setup", name: "Damage Calculator", sub: "Headshot and body damage, shots to kill, TTK", color: "#f87171" },
+  { id: "cmp", cat: "setup", name: "Weapon Compare", sub: "Any two guns, stat by stat", color: "#60a5fa" },
+  { id: "chars", cat: "setup", name: "Character Combo", sub: "Best skills and pet for your role", color: "#a78bfa" },
+  { id: "practice", cat: "train", name: "Practice Planner", sub: "Daily drills and a practice streak", color: "#2dd4bf" },
+  { id: "aim", cat: "train", name: "Aim Trainer", sub: "30-second tap drill for speed and accuracy", color: "#fb7185" },
+  { id: "drag", cat: "train", name: "Drag Headshot", sub: "Drag up from the body to land the headshot", color: "#ef4444" },
+  { id: "track", cat: "train", name: "Tracking", sub: "Keep your finger on a moving target", color: "#f97316" },
+  { id: "peek", cat: "train", name: "Peek Reflex", sub: "Hit enemies peeking out from cover", color: "#a3e635" },
+  { id: "react", cat: "train", name: "Reaction Test", sub: "Measure your reaction time in milliseconds", color: "#facc15" },
+  { id: "taps", cat: "train", name: "Tap Speed", sub: "Taps per second in 10 seconds", color: "#e879f9" },
+  { id: "spot", cat: "train", name: "Spot the Enemy", sub: "Find the odd tile before time runs out", color: "#34d399" },
+  { id: "stats", cat: "squad", name: "Match Stats", sub: "Kills, K/D, Booyah rate and progress", color: "#10b981" },
+  { id: "tour", cat: "squad", name: "Tournament", sub: "Points table for custom rooms", color: "#ffbe2e" },
+  { id: "teams", cat: "squad", name: "Team Maker", sub: "Random teams and roles for custom rooms", color: "#38bdf8" },
+  { id: "drop", cat: "squad", name: "Drop Spot Picker", sub: "Random Bermuda landing spot for your squad", color: "#4ade80" },
+  { id: "budget", cat: "extra", name: "Diamond Planner", sub: "Plan your diamond goals and top-ups", color: "#22d3ee" },
+  { id: "names", cat: "extra", name: "Stylish Names", sub: "Nicknames with fancy fonts and symbols", color: "#f472b6" },
 ];
-$("toolGrid").innerHTML = TOOLS.map((t, i) => `
-  <a class="tool" href="#${t.id}" style="--tc:${t.color};--i:${i}">
+const CATS_ORDER = [["setup", "Setup"], ["train", "Training"], ["squad", "Squad & stats"], ["extra", "Extras"]];
+let tileN = 0;
+$("toolGrid").innerHTML = CATS_ORDER.map(([c, label]) => {
+  const list = TOOLS.filter((t) => t.cat === c);
+  return `<h3 class="section-label">${label} <span>${list.length}</span></h3><div class="tool-grid">` + list.map((t) => `
+  <a class="tool" href="#${t.id}" style="--tc:${t.color};--i:${tileN++}">
     <span class="ico">${icon(t.id)}</span>
     <span class="go">${icon("arrow")}</span><span class="lockmark">${icon("lock")}</span>
     <h4>${t.name}</h4><p>${t.sub}</p>
-  </a>`).join("");
+  </a>`).join("") + "</div>";
+}).join("");
 $("sideNav").innerHTML = `<a class="nav-link" href="#home" data-id="home"><span class="ico">${icon("home")}</span>Home</a>` +
-  TOOLS.map((t) => `<a class="nav-link" href="#${t.id}" data-id="${t.id}" style="--tc:${t.color}"><span class="ico">${icon(t.id)}</span>${t.name}</a>`).join("") +
+  CATS_ORDER.map(([c, label]) => `<span class="nav-head">${label}</span>` + TOOLS.filter((t) => t.cat === c)
+    .map((t) => `<a class="nav-link" href="#${t.id}" data-id="${t.id}" style="--tc:${t.color}"><span class="ico">${icon(t.id)}</span>${t.name}</a>`).join("")).join("") +
   `<a class="nav-link nav-account" href="#account" data-id="account"><span class="ico">${icon("user")}</span>Account</a>`;
 const PAGES = { login: { name: "Log in", sub: "Sync your data across devices" }, account: { name: "Account", sub: "Profile and cloud sync" } };
 
@@ -575,6 +586,7 @@ function aimEnd() {
   $("aim_msg").hidden = false; $("aim_start").onclick = aimStart;
   aimHud({ hits: aim.hits, miss: aim.miss, left: 0 });
   aim = null;
+  markDrill("aim");
 }
 function aimStart() {
   aim = { hits: 0, miss: 0, left: AIM_TIME };
@@ -622,6 +634,7 @@ $("r_pad").addEventListener("pointerdown", () => {
     if (rx.times.length >= REACT_ROUNDS) {
       const avg = Math.round(rx.times.reduce((a, b) => a + b, 0) / rx.times.length), best = load("react_best", 0);
       if (!best || avg < best) { save("react_best", avg); reactKpis(); }
+      markDrill("react");
       return reactSet("done", `${avg} ms average`, `${rating(avg)}${!best || avg < best ? " · new best!" : ""} · Tap to play again`);
     }
     reactSet("result", `${ms} ms`, "Tap for the next round");
@@ -686,47 +699,71 @@ $("tm_copy").onclick = (e) => teamText ? copy(teamText) : toast("Shuffle teams f
 onShow.teams = () => { if (!$("tm_out").children.length) makeTeams(); };
 
 /* ---------- Practice planner ---------- */
+// In-game drills are ticked by hand; app drills tick themselves when you finish a round of that game.
 const DRILLS = [
-  ["Headshot warm-up", "50 headshots on training dummies with an SMG"],
-  ["Drag shots", "20 drag headshots with the M1887 or M1014"],
-  ["Gloo wall speed", "20 quick gloo walls while moving"],
-  ["Sniper flicks", "15 quick-scope hits with AWM or M82B"],
-  ["Movement", "5 minutes of jump-shots and crouch spam"],
-  ["Real fights", "3 Lone Wolf or Clash Squad matches"],
+  { id: "g:hs", t: "Headshot warm-up", d: "50 headshots on training dummies with an SMG" },
+  { id: "g:drag", t: "Drag shots", d: "20 drag headshots with the M1887 or M1014" },
+  { id: "g:gloo", t: "Gloo wall speed", d: "20 quick gloo walls while moving" },
+  { id: "g:snipe", t: "Sniper flicks", d: "15 quick-scope hits with AWM or M82B" },
+  { id: "g:move", t: "Movement", d: "5 minutes of jump-shots and crouch spam" },
+  { id: "g:fight", t: "Real fights", d: "3 Lone Wolf or Clash Squad matches" },
+  { id: "a:aim", t: "Aim Trainer", d: "Finish one 30-second drill", app: "aim" },
+  { id: "a:drag", t: "Drag Headshot", d: "Finish one round of 20 enemies", app: "drag" },
+  { id: "a:track", t: "Tracking", d: "Finish one 20-second round", app: "track" },
+  { id: "a:peek", t: "Peek Reflex", d: "Finish one round of 15 peeks", app: "peek" },
+  { id: "a:react", t: "Reaction Test", d: "Finish all 5 rounds", app: "react" },
+  { id: "a:spot", t: "Spot the Enemy", d: "Finish one 30-second round", app: "spot" },
 ];
+const DAILY_GOAL = 8;
 const today = () => new Date().toISOString().slice(0, 10);
+const yesterday = () => new Date(Date.now() - 864e5).toISOString().slice(0, 10);
 let practice = { day: "", done: [], streak: 0, best: 0, last: "" };
 function practiceDay() {
   if (practice.day === today()) return;
-  const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
-  if (practice.last !== y && practice.last !== today()) practice.streak = 0; // missed a day
+  if (practice.last !== yesterday() && practice.last !== today()) practice.streak = 0; // missed a day
   practice.day = today(); practice.done = [];
+}
+function setDrill(id, on) {
+  practiceDay();
+  const was = practice.done.length >= DAILY_GOAL;
+  practice.done = on ? [...new Set([...practice.done, id])] : practice.done.filter((x) => x !== id);
+  const now = practice.done.length >= DAILY_GOAL;
+  if (now && !was) { practice.streak++; practice.last = today(); practice.best = Math.max(practice.best, practice.streak); toast(`Daily goal done! ${practice.streak}-day streak`); }
+  if (!now && was) { practice.streak = Math.max(0, practice.streak - 1); practice.last = practice.streak ? yesterday() : ""; }
+  save("practice", practice);
+}
+/* Called by the training games when a round finishes. */
+function markDrill(game) {
+  const d = DRILLS.find((x) => x.app === game);
+  practiceDay();
+  if (d && !practice.done.includes(d.id)) setDrill(d.id, true);
 }
 function renderPractice() {
   practiceDay();
   const n = practice.done.length;
-  kpis($("p_kpis"), [["Done today", n, 0], ["Of drills", DRILLS.length, 0], ["Streak (days)", practice.streak, 0, true], ["Best streak", practice.best, 0, true]]);
+  kpis($("p_kpis"), [["Done today", n, 0], ["Daily goal", DAILY_GOAL, 0], ["Streak (days)", practice.streak, 0, true], ["Best streak", practice.best, 0, true]]);
   $("p_date").textContent = new Date().toLocaleDateString([], { weekday: "long", day: "numeric", month: "short" });
-  $("p_list").innerHTML = DRILLS.map(([t, d], i) => `<label class="item drill" style="--i:${i}"><input type="checkbox" data-drill="${i}" ${practice.done.includes(i) ? "checked" : ""}>
-    <span class="tick">${icon("check")}</span><div class="grow"><div class="title">${t}</div><div class="meta">${d}</div></div></label>`).join("");
+  const row = (x, i) => `<label class="item drill" style="--i:${i}"><input type="checkbox" data-drill="${x.id}" ${practice.done.includes(x.id) ? "checked" : ""}>
+    <span class="tick">${icon("check")}</span><div class="grow"><div class="title">${x.t}${x.app ? ' <span class="pill info">Auto</span>' : ""}</div><div class="meta">${x.d}</div></div>
+    ${x.app ? `<a class="btn btn-ghost btn-sm" href="#${x.app}">Play</a>` : ""}</label>`;
+  $("p_list").innerHTML = `<div class="drill-head">${bar((n / DAILY_GOAL) * 100)}<span>${Math.min(n, DAILY_GOAL)} / ${DAILY_GOAL}</span></div>` +
+    `<h4 class="sub-head">In the game</h4>` + DRILLS.filter((x) => !x.app).map(row).join("") +
+    `<h4 class="sub-head">In this app</h4>` + DRILLS.filter((x) => x.app).map((x, i) => row(x, i + 6)).join("");
+  $("p_note").textContent = `Finish any ${DAILY_GOAL} of the ${DRILLS.length} drills to grow your streak. App drills tick themselves when you finish a round. The list resets each day.`;
+  growBars($("p_list"));
 }
 $("p_list").addEventListener("change", (e) => {
-  const i = +e.target.dataset.drill;
-  practiceDay();
-  const wasDone = practice.done.length === DRILLS.length;
-  practice.done = e.target.checked ? [...new Set([...practice.done, i])] : practice.done.filter((x) => x !== i);
-  const allDone = practice.done.length === DRILLS.length;
-  if (allDone && !wasDone) { practice.streak++; practice.last = today(); practice.best = Math.max(practice.best, practice.streak); toast(`All drills done! ${practice.streak}-day streak`); }
-  if (!allDone && wasDone) { practice.streak = Math.max(0, practice.streak - 1); practice.last = practice.streak ? new Date(Date.now() - 864e5).toISOString().slice(0, 10) : ""; }
-  save("practice", practice); renderPractice();
+  if (!e.target.dataset.drill) return;
+  setDrill(e.target.dataset.drill, e.target.checked); renderPractice();
 });
 onShow.practice = renderPractice;
 
 /* Extra synced keys for the newer tools */
-const EXTRA_KEYS = ["aim_best", "react_best", "drop_custom", "drop_off", "team_names", "practice"];
+const EXTRA_KEYS = ["aim_best", "react_best", "drop_custom", "drop_off", "team_names", "practice", "drag_best", "track_best", "taps_best", "peek_best", "spot_best"];
 function loadExtras() {
   dropCustom = load("drop_custom", []); dropOff = load("drop_off", []);
   practice = { day: "", done: [], streak: 0, best: 0, last: "", ...load("practice", {}) };
+  practice.done = (practice.done || []).filter((x) => typeof x === "string"); // drop ids from the old numbered list
   $("tm_names").value = load("team_names", "Raxa\nAli\nSam\nZed\nNova\nKai\nRio\nMax");
 }
 loadExtras();
@@ -764,4 +801,4 @@ window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); defe
 $("installBtn").onclick = async () => { if (!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; $("installBtn").hidden = true; };
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
 
-route();
+document.addEventListener("DOMContentLoaded", route);

@@ -1,25 +1,34 @@
 # FF Toolkit
 
-Fourteen tools for Free Fire players in one app. It runs in the browser as a web app (PWA) and on Android as an APK. Tools unlock for members the admin has given a login; everyone else sees a locked demo.
+Nineteen tools for Free Fire players in one app. It runs in the browser as a web app (PWA) and on Android as an APK. Tools unlock for members the admin has given a login; everyone else sees a locked demo.
 
 ## Tools
 
-| Tool | What it does |
-| --- | --- |
-| Sensitivity | Suggests General, Red Dot, 2x, 4x, AWM and Free Look sensitivity from your screen size, RAM, playstyle and finger setup |
-| Graphics Settings | Recommends Graphics, High FPS, Shadow and resolution settings from your RAM, refresh rate and priority |
-| Damage Calculator | Headshot and body damage, shots to kill and TTK for a weapon, distance and armor level |
-| Weapon Compare | 40 guns (SMG, AR, Shotgun, Marksman, Sniper, LMG, Pistol) compared stat by stat. Weapon data is editable in the app |
-| Character Combo | 31 characters and 8 pets with search and filters, plus a best combo (1 active + 3 passive + pet) for each role |
-| Aim Trainer | 30-second tap drill; targets shrink as you score. Tracks hits, accuracy and your best score |
-| Reaction Test | Five rounds of wait-for-green; shows your average, fastest and best reaction time |
-| Match Stats | Log matches (kills, damage, rank) and see Booyah %, K/D, average kills and a chart. JSON export and import |
-| Tournament | Add teams and match results; the points table (placement + kills) updates automatically |
-| Team Maker | Shuffle players into solo, duo or squad teams and hand out roles (Rusher, Support, Sniper, IGL) |
-| Drop Spot Picker | Random Bermuda landing spot; leave spots out or add your own |
-| Practice Planner | Six daily drills with a practice streak |
-| Diamond Planner | Diamond goals, how many more you need, and the approximate cost |
-| Stylish Names | Nicknames in fancy fonts and symbols, copied with one tap |
+Tools are grouped on the home screen into four sections.
+
+| Section | Tool | What it does |
+| --- | --- | --- |
+| Setup | Sensitivity | Suggests General, Red Dot, 2x, 4x, AWM and Free Look sensitivity from your screen size, RAM, playstyle and finger setup |
+| Setup | Graphics Settings | Recommends Graphics, High FPS, Shadow and resolution settings from your RAM, refresh rate and priority |
+| Setup | Damage Calculator | Headshot and body damage, shots to kill and TTK for a weapon, distance and armor level |
+| Setup | Weapon Compare | 40 guns (SMG, AR, Shotgun, Marksman, Sniper, LMG, Pistol) compared stat by stat. Weapon data is editable in the app |
+| Setup | Character Combo | 31 characters and 8 pets with search and filters, plus a best combo (1 active + 3 passive + pet) for each role |
+| Training | Practice Planner | 12 daily drills (6 in the game, 6 in this app). App drills tick themselves when you finish a round; any 8 keep your streak going |
+| Training | Aim Trainer | 30-second tap drill; targets shrink as you score. Tracks hits, accuracy and your best score |
+| Training | Drag Headshot | Press on an enemy's body, drag up and release on the head, like the in-game drag shot. 20 enemies, and they strafe from the 6th |
+| Training | Tracking | Keep your finger on a target that speeds up over 20 seconds; scores your time on target |
+| Training | Peek Reflex | Enemies peek out from either side of a wall for shorter and shorter windows; hit them before they hide |
+| Training | Reaction Test | Five rounds of wait-for-green; shows your average, fastest and best reaction time |
+| Training | Tap Speed | Taps per second over 10 seconds |
+| Training | Spot the Enemy | Find the one tile with a slightly different shade; the grid grows and the difference shrinks each level |
+| Squad & stats | Match Stats | Log matches (kills, damage, rank) and see Booyah %, K/D, average kills and a chart. JSON export and import |
+| Squad & stats | Tournament | Add teams and match results; the points table (placement + kills) updates automatically |
+| Squad & stats | Team Maker | Shuffle players into solo, duo or squad teams and hand out roles (Rusher, Support, Sniper, IGL) |
+| Squad & stats | Drop Spot Picker | Random Bermuda landing spot; leave spots out or add your own |
+| Extras | Diamond Planner | Diamond goals, how many more you need, and the approximate cost |
+| Extras | Stylish Names | Nicknames in fancy fonts and symbols, copied with one tap |
+
+Every training game saves your best score, and members' best scores sync with their account.
 
 Weapon stats, character abilities and graphics advice are approximate and change with game updates. The app is not a cheat or hack and never connects to the game.
 

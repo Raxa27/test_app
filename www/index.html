@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b0d12">
 <meta name="color-scheme" content="dark">
-<meta name="description" content="Fourteen tools for Free Fire players: sensitivity, graphics, damage calculator, aim trainer, stats tracker, tournament table and more.">
+<meta name="description" content="Nineteen tools for Free Fire players: sensitivity, graphics, damage calculator, aim trainer, stats tracker, tournament table and more.">
 <title>FF Toolkit</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -47,11 +47,10 @@
         <div class="hero">
           <span class="eyebrow">Free Fire companion</span>
           <h2>Take your game to the <span class="grad">next level</span></h2>
-          <p>Fourteen tools in one place: sensitivity and graphics setup, damage maths, aim and reaction training, match tracking and tournament tables.</p>
+          <p>Nineteen tools in one place: sensitivity and graphics setup, damage maths, seven training games, match tracking and tournament tables.</p>
           <div id="homeStats" class="kpis"></div>
         </div>
-        <h3 class="section-label">All tools</h3>
-        <div id="toolGrid" class="tool-grid"></div>
+        <div id="toolGrid"></div>
         <p class="disclaimer">This app is not affiliated with Garena or Free Fire and never connects to the game. No cheats, no hacks.</p>
       </section>
 
@@ -295,13 +294,20 @@
         </div>
       </section>
 
+      <!-- Training games (filled in by training.js) -->
+      <section id="drag" class="page"></section>
+      <section id="track" class="page"></section>
+      <section id="taps" class="page"></section>
+      <section id="peek" class="page"></section>
+      <section id="spot" class="page"></section>
+
       <!-- Practice planner -->
       <section id="practice" class="page">
         <div class="kpis kpis-4" id="p_kpis"></div>
         <div class="card">
           <div class="card-head"><h3 class="card-title">Today's drills</h3><span class="pill mute" id="p_date"></span></div>
           <div id="p_list" class="list"></div>
-          <p class="note">Finish every drill to grow your streak. The list resets each day.</p>
+          <p class="note" id="p_note"></p>
         </div>
       </section>
 
@@ -414,6 +420,11 @@
   <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></symbol>
   <symbol id="i-teams" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .6 3.5 2.3 3.5 5.2"/></symbol>
   <symbol id="i-practice" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m8 12 2.5 2.5L16 9"/></symbol>
+  <symbol id="i-drag" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5"/><path d="M12 21V10M8 14l4-4 4 4"/></symbol>
+  <symbol id="i-track" viewBox="0 0 24 24"><path d="M3 17c3-6 6-9 9-9s5 3 9-2"/><circle cx="12" cy="8" r="2.5"/></symbol>
+  <symbol id="i-taps" viewBox="0 0 24 24"><path d="M9 11V5a2 2 0 0 1 4 0v6M13 10a2 2 0 0 1 4 0v3a7 7 0 0 1-7 7 6 6 0 0 1-5-3l-2-4a2 2 0 0 1 3-2l2 2"/></symbol>
+  <symbol id="i-peek" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="18" rx="1"/><circle cx="18" cy="8" r="2"/><path d="M15 13h4"/></symbol>
+  <symbol id="i-spot" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-5-5"/><circle cx="11" cy="11" r="2"/></symbol>
   <symbol id="i-sens" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="1.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></symbol>
   <symbol id="i-dmg" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></symbol>
   <symbol id="i-cmp" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17V11M13 17V6M18 17v-4"/></symbol>
@@ -441,6 +452,7 @@
 </svg>
 <script src="firebase-config.js"></script>
 <script src="app.js"></script>
+<script src="training.js"></script>
 <script src="auth.js"></script>
 </body>
 </html>
