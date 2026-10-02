@@ -317,3 +317,46 @@ svg.chart text{font-family:var(--display);font-weight:700}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;animation-delay:0ms!important;transition-duration:.01ms!important}
   html{scroll-behavior:auto}
 }
+
+/* ---------- Auth & account ---------- */
+.auth-wrap{max-width:440px;margin:0 auto}
+.auth-card{padding:26px 22px}
+.auth-brand{text-align:center;margin-bottom:20px}
+.auth-brand img{filter:drop-shadow(0 8px 22px rgba(255,138,31,.5));animation:pop .6s var(--ease) both}
+.auth-brand h2{font-size:1.8rem;margin:12px 0 6px;text-wrap:balance}
+.auth-brand p{color:var(--muted);margin:0;font-size:.9rem}
+.auth-tabs{margin-bottom:18px}
+.pass-wrap{display:flex;gap:8px}
+.pass-wrap input{flex:1}
+.pass-wrap .icon-btn{height:auto;width:46px}
+.form-err{margin:-4px 0 12px;padding:10px 12px;border-radius:10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#fecaca;font-size:.86rem;animation:pop .3s var(--ease)}
+.link-btn{display:block;margin:12px auto 0;background:none;border:0;color:var(--muted);font:600 .86rem var(--font);cursor:pointer;padding:6px}
+.link-btn:hover{color:var(--accent-2)}
+.link-btn:focus-visible{outline:2px solid var(--accent);border-radius:6px}
+.link-btn.guest{margin-top:16px;color:var(--text)}
+.divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--faint);font-size:.78rem;text-transform:uppercase;letter-spacing:1px}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--border-2)}
+.g-logo{stroke:none;width:20px;height:20px}
+.btn:disabled{opacity:.6;cursor:wait}
+.btn.loading{color:transparent!important}
+.btn.loading::after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(27,13,0,.35);border-top-color:#1b0d00;animation:spin .7s linear infinite}
+.setup-note{padding:14px;border-radius:12px;background:rgba(255,190,46,.08);border:1px solid rgba(255,190,46,.25);font-size:.88rem;margin-bottom:6px}
+.setup-note p{margin:6px 0 0;color:#c3c9d6}
+.setup-note code{font-size:.82rem;color:var(--accent-2)}
+.acct-btn{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 12px;border-radius:999px;border:1px solid var(--border-2);background:var(--surface-2);color:var(--text);font-weight:600;font-size:.85rem;text-decoration:none!important;transition:border-color .2s;flex:none}
+.acct-btn:hover{border-color:var(--accent)}
+.acct-btn svg{width:18px;height:18px}
+.acct-btn.signed{padding:0;width:38px;justify-content:center;border-color:rgba(255,138,31,.5)}
+.acct-avatar,.profile-avatar{display:grid;place-items:center;border-radius:50%;background:var(--grad);color:#1b0d00;font:700 1rem var(--display);object-fit:cover}
+.acct-avatar{width:32px;height:32px}
+.profile{display:flex;align-items:center;gap:16px}
+.profile-avatar{width:64px;height:64px;font-size:1.7rem;box-shadow:var(--glow);flex:none}
+.profile h3{font-size:1.4rem}
+.profile p{margin:2px 0 0;color:var(--muted);font-size:.88rem;word-break:break-all}
+.profile .grow{min-width:0}
+.sync-row{display:flex;justify-content:space-between;padding:10px 0 14px;font-size:.9rem;color:var(--muted)}
+.sync-row b{color:var(--text)}
+.danger-btn{color:var(--bad)}
+.danger-btn:hover{border-color:var(--bad)}
+@media (min-width:960px){.nav-account{margin-top:8px;border-top:1px solid var(--border);border-radius:0 0 12px 12px;padding-top:14px}}
+body[data-page="login"] #acctBtn{display:none}
