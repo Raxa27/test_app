@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="ur">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cut">
+<meta name="theme-color" content="#05060a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Voice Assistant</title>
+<style>
+  :root {
+    --bg: #05060a;
+    --text: #f2f3f7;
+    --muted: #8a8fa3;
+    --panel: rgba(255, 255, 255, 0.06);
+    --border: rgba(255, 255, 255, 0.1);
+    --c1: #5b8cff;
+    --c2: #c56bff;
+    --c3: #29d6c7;
+    --danger: #ff6b7a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: radial-gradient(ellipse at 50% 30%, #11142a 0%, var(--bg) 70%);
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", "Noto Nastaliq Urdu", "Noto Sans Devanagari", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    overflow-x: hidden;
+  }
+  header {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  select, button, input {
+    font: inherit;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 14px;
+  }
+  button { cursor: pointer; }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--c1); outline-offset: 2px; }
+  .toggle[aria-pressed="true"] { background: linear-gradient(90deg, var(--c1), var(--c2)); border-color: transparent; }
+
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    min-height: 0;
+  }
+  #orb {
+    position: relative;
+    width: min(56vw, 220px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: none;
+    padding: 0;
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #orb .blob {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    filter: blur(18px);
+    opacity: 0.85;
+    mix-blend-mode: screen;
+    transition: transform 0.4s ease;
+  }
+  #orb .b1 { background: radial-gradient(circle at 35% 35%, var(--c1), transparent 65%); animation: drift1 6s ease-in-out infinite; }
+  #orb .b2 { background: radial-gradient(circle at 65% 40%, var(--c2), transparent 65%); animation: drift2 7s ease-in-out infinite; }
+  #orb .b3 { background: radial-gradient(circle at 50% 70%, var(--c3), transparent 65%); animation: drift3 8s ease-in-out infinite; }
+  #orb .core {
+    position: absolute;
+    inset: 22%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, rgba(255,255,255,0.55), rgba(255,255,255,0.05) 60%);
+    box-shadow: 0 0 40px rgba(140, 150, 255, 0.35);
+  }
+  #orb svg { position: absolute; inset: 0; margin: auto; width: 28%; height: 28%; opacity: 0.9; }
+  body[data-state="listening"] #orb .blob { animation-duration: 1.6s, 1.8s, 2s; transform: scale(1.12); }
+  body[data-state="listening"] #orb .core { animation: pulse 1s ease-in-out infinite; }
+  body[data-state="thinking"] #orb { animation: spin 2.2s linear infinite; }
+  body[data-state="speaking"] #orb .core { animation: pulse 0.5s ease-in-out infinite; }
+  @keyframes drift1 { 50% { transform: translate(8%, 6%) scale(1.08); } }
+  @keyframes drift2 { 50% { transform: translate(-8%, 4%) scale(0.94); } }
+  @keyframes drift3 { 50% { transform: translate(2%, -8%) scale(1.06); } }
+  @keyframes pulse { 50% { transform: scale(1.12); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { #orb, #orb * { animation: none !important; } }
+
+  #status { color: var(--muted); font-size: 15px; min-height: 1.4em; text-align: center; }
+  #live { font-size: 22px; line-height: 1.5; text-align: center; min-height: 1.5em; max-width: 100%; overflow-wrap: anywhere; }
+  #log {
+    width: 100%;
+    max-height: 28vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px;
+  }
+  .msg { padding: 10px 14px; border-radius: 16px; max-width: 85%; line-height: 1.5; overflow-wrap: anywhere; unicode-bidi: plaintext; }
+  .msg.user { align-self: flex-end; background: linear-gradient(90deg, var(--c1), var(--c2)); }
+  .msg.bot { align-self: flex-start; background: var(--panel); border: 1px solid var(--border); }
+  .msg.err { align-self: center; color: var(--danger); background: transparent; font-size: 14px; }
+
+  form { width: 100%; max-width: 560px; display: flex; gap: 8px; }
+  form input { flex: 1; min-width: 0; border-radius: 14px; padding: 12px 14px; unicode-bidi: plaintext; }
+  form button { border-radius: 14px; }
+  .hint { color: var(--muted); font-size: 13px; text-align: center; max-width: 560px; }
+</style>
+</head>
+<body data-state="idle">
+  <header>
+    <select id="lang" aria-label="Language">
+      <option value="ur-PK">اردو</option>
+      <option value="hi-IN">हिन्दी</option>
+      <option value="en-US">English</option>
+    </select>
+    <button id="handsfree" class="toggle" aria-pressed="false" title="Wake word se chalayein">Hey mode</button>
+    <button id="reset" title="Nai baat shuru karein">Reset</button>
+  </header>
+
+  <main>
+    <button id="orb" aria-label="Bolne ke liye dabayein">
+      <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+      <span class="core"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>
+      </svg>
+    </button>
+    <div id="status">Orb dabayein aur bolein</div>
+    <div id="live" aria-live="polite"></div>
+    <div id="log" aria-live="polite"></div>
+  </main>
+
+  <form id="typeForm">
+    <input id="typeInput" placeholder="Ya yahan likhein…" autocomplete="off">
+    <button type="submit">Bhejein</button>
+  </form>
+  <p class="hint" id="hint"></p>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  };
+
+  const WAKE_WORDS = ["suno", "sunno", "سنو", "सुनो", "hey assistant", "hey dost", "ہیلو", "hello assistant"];
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const synth = window.speechSynthesis;
+
+  let lang = store.get("lang") || "ur-PK";
+  let password = store.get("password") || "";
+  let handsFree = false;
+  let busy = false;
+  let recognition = null;
+  let listening = false;
+  let awaitingCommand = false;
+
+  $("lang").value = lang;
+
+  function setState(state, status) {
+    document.body.dataset.state = state;
+    if (status !== undefined) $("status").textContent = status;
+  }
+
+  function addMsg(kind, text) {
+    const div = document.createElement("div");
+    div.className = "msg " + kind;
+    div.textContent = text;
+    $("log").appendChild(div);
+    $("log").scrollTop = $("log").scrollHeight;
+  }
+
+  async function api(path, body) {
+    const res = await fetch(path, {
+      method: body === undefined ? "GET" : "POST",
+      headers: { "Content-Type": "application/json", "X-Assistant-Password": password },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      password = prompt("Password likhein:") || "";
+      store.set("password", password);
+      throw new Error("Password ghalat hai, dobara koshish karein.");
+    }
+    if (!res.ok) throw new Error(data.error || "Kuch ghalat ho gaya.");
+    return data;
+  }
+
+  // ---------- Speaking ----------
+  function pickVoice(code) {
+    const voices = synth ? synth.getVoices() : [];
+    const base = code.split("-")[0];
+    return voices.find(v => v.lang === code)
+      || voices.find(v => v.lang.startsWith(base))
+      || (base === "ur" ? voices.find(v => v.lang.startsWith("hi")) : null)
+      || null;
+  }
+
+  function speak(text) {
+    return new Promise((resolve) => {
+      if (!synth) return resolve();
+      synth.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      const v = pickVoice(lang);
+      if (v) { u.voice = v; u.lang = v.lang; } else { u.lang = lang; }
+      u.rate = 1.0;
+      u.onend = u.onerror = () => resolve();
+      setState("speaking", "Bol raha hoon… (rokne ke liye orb dabayein)");
+      synth.speak(u);
+    });
+  }
+  if (synth) synth.onvoiceschanged = () => synth.getVoices();
+
+  // ---------- Asking the agent ----------
+  async function ask(text) {
+    text = text.trim();
+    if (!text || busy) return;
+    busy = true;
+    stopListening();
+    addMsg("user", text);
+    $("live").textContent = "";
+    setState("thinking", "Soch raha hoon…");
+    try {
+      const { reply } = await api("/api/ask", { text });
+      addMsg("bot", reply);
+      await speak(reply);
+    } catch (e) {
+      addMsg("err", e.message);
+    } finally {
+      busy = false;
+      setState("idle", handsFree ? `"${WAKE_WORDS[0]}" bolein…` : "Orb dabayein aur bolein");
+      if (handsFree) startListening();
+    }
+  }
+
+  // ---------- Listening ----------
+  function findWake(text) {
+    const lower = text.toLowerCase();
+    for (const w of WAKE_WORDS) {
+      const i = lower.indexOf(w);
+      if (i !== -1) return lower.slice(i + w.length).replace(/^[\s,.،!?]+/, "");
+    }
+    return null;
+  }
+
+  function startListening() {
+    if (!SR || listening || busy) return;
+    recognition = new SR();
+    recognition.lang = lang;
+    recognition.interimResults = true;
+    recognition.continuous = handsFree;
+    let finalText = "";
+
+    recognition.onstart = () => {
+      listening = true;
+      if (!handsFree || awaitingCommand) setState("listening", "Sun raha hoon…");
+    };
+    recognition.onresult = (event) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const r = event.results[i];
+        if (!r.isFinal) { interim += r[0].transcript; continue; }
+        const said = r[0].transcript.trim();
+        if (!handsFree) { finalText += " " + said; continue; }
+        if (awaitingCommand) { awaitingCommand = false; ask(said); return; }
+        const rest = findWake(said);
+        if (rest === null) continue;
+        if (rest) { ask(rest); return; }
+        awaitingCommand = true;
+        setState("listening", "Ji, bataiye…");
+      }
+      if (!handsFree || awaitingCommand) $("live").textContent = (finalText + " " + interim).trim();
+    };
+    recognition.onerror = (e) => {
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+        handsFree = false;
+        $("handsfree").setAttribute("aria-pressed", "false");
+        addMsg("err", "Mic ki ijazat nahi mili. Browser settings mein microphone allow karein.");
+      } else if (e.error !== "no-speech" && e.error !== "aborted") {
+        addMsg("err", "Mic error: " + e.error);
+      }
+    };
+    recognition.onend = () => {
+      listening = false;
+      recognition = null;
+      if (busy) return;
+      if (!handsFree) {
+        const text = finalText.trim();
+        if (text) ask(text); else setState("idle", "Orb dabayein aur bolein");
+      } else {
+        setTimeout(startListening, 250);  // keep hands-free listening alive
+      }
+    };
+    try { recognition.start(); } catch { listening = false; }
+  }
+
+  function stopListening() {
+    if (recognition) { try { recognition.abort(); } catch {} }
+    listening = false;
+  }
+
+  // ---------- Controls ----------
+  $("orb").addEventListener("click", () => {
+    if (synth && synth.speaking) { synth.cancel(); return; }
+    if (busy) return;
+    if (!SR) { $("typeInput").focus(); return; }
+    if (handsFree) { awaitingCommand = true; setState("listening", "Ji, bataiye…"); if (!listening) startListening(); return; }
+    if (listening) { recognition && recognition.stop(); return; }
+    startListening();
+  });
+
+  $("handsfree").addEventListener("click", () => {
+    handsFree = !handsFree;
+    $("handsfree").setAttribute("aria-pressed", String(handsFree));
+    awaitingCommand = false;
+    stopListening();
+    if (handsFree) {
+      setState("idle", `"${WAKE_WORDS[0]}" bolein, phir apna kaam`);
+      setTimeout(startListening, 300);
+    } else {
+      setState("idle", "Orb dabayein aur bolein");
+    }
+  });
+
+  $("lang").addEventListener("change", (e) => {
+    lang = e.target.value;
+    store.set("lang", lang);
+    if (listening) { stopListening(); if (handsFree) setTimeout(startListening, 300); }
+  });
+
+  $("reset").addEventListener("click", async () => {
+    try { await api("/api/reset", {}); $("log").innerHTML = ""; setState("idle", "Nai baat shuru"); }
+    catch (e) { addMsg("err", e.message); }
+  });
+
+  $("typeForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = $("typeInput").value;
+    $("typeInput").value = "";
+    ask(text);
+  });
+
+  // ---------- Reminders ----------
+  async function checkReminders() {
+    try {
+      const { reminders } = await api("/api/reminders");
+      for (const text of reminders) {
+        addMsg("bot", "⏰ " + text);
+        if ("Notification" in window && Notification.permission === "granted") new Notification("Reminder", { body: text });
+        if (!busy) await speak("Reminder: " + text);
+      }
+      if (reminders.length && !busy) setState("idle", "Orb dabayein aur bolein");
+    } catch {}
+  }
+  setInterval(checkReminders, 20000);
+  if ("Notification" in window && Notification.permission === "default") {
+    document.addEventListener("click", () => Notification.requestPermission(), { once: true });
+  }
+
+  // ---------- Startup ----------
+  if (!SR) {
+    $("hint").textContent = "Is browser mein awaaz pehchanne ki suhulat nahi. Chrome ya Edge istemal karein, ya likh kar poochein.";
+  } else if (!window.isSecureContext) {
+    $("hint").textContent = "Mic ke liye page https ya localhost par khulna zaroori hai.";
+  } else {
+    $("hint").textContent = "Hey mode on karein to bas \"suno\" bol kar kaam batayein.";
+  }
+  fetch("/api/config").then(r => r.json()).then(cfg => {
+    if (cfg.password_required && !password) {
+      password = prompt("Password likhein:") || "";
+      store.set("password", password);
+    }
+  }).catch(() => {});
+})();
+</script>
+</body>
+</html>

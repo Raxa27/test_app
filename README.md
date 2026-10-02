@@ -44,7 +44,39 @@ Reminder set: 2026-10-03 09:00 — meeting.
 
 Commands: `/reset` se nai baat shuru hoti hai aur `/exit` se band hota hai.
 
-## Phone par chalayein (Telegram)
+## 🎙️ Siri ki tarah bol kar chalayein
+
+```bash
+python -m assistant.voice_server
+```
+
+Phir **Chrome ya Edge** mein `http://localhost:8000` kholein.
+
+- **Orb dabayein aur bolein:** "kal subah 9 baje meeting ka reminder laga do". Agent kaam kar ke bol kar jawab dega.
+- **Hey mode:** ise on karein to orb dabane ki zaroorat nahi. Bas **"suno"** bolein aur phir apna kaam batayein, jaise "suno, aaj ka mausam kaisa hai?". Ye "hey assistant" aur "hey dost" bhi samajhta hai.
+- Upar se zabaan chunein: اردو, हिन्दी ya English.
+- Reminder ka waqt aane par ye bol kar yaad dilata hai, jab tak page khula ho.
+- Jawab bolte waqt orb dabayein to wo chup ho jayega.
+
+### Phone par voice assistant
+
+Phone ka browser mic sirf **https** link par chalne deta hai. Is ka sabse aasan tareeqa ek free tunnel hai:
+
+1. Password zaroor set karein, warna link wala koi bhi shakhs aapka assistant chala sakta hai:
+   ```bash
+   export ASSISTANT_PASSWORD="koi-mazboot-password"
+   python -m assistant.voice_server
+   ```
+2. Doosri terminal mein [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) chalayein:
+   ```bash
+   cloudflared tunnel --url http://localhost:8000
+   ```
+3. Jo `https://....trycloudflare.com` link mile wo phone par Chrome mein kholein aur password daalein.
+4. Chrome menu se **"Add to Home screen"** dabayein. Ab ye phone par app ki tarah icon se khulega.
+
+iPhone par Safari mein bhi chalta hai, lekin Hey mode Chrome (Android) aur computer par behtar kaam karta hai.
+
+## Phone par likh kar chalayein (Telegram)
 
 1. Telegram mein **@BotFather** kholein, `/newbot` likhein aur jo token mile wo copy karein.
 2. Bot chalayein:
@@ -75,5 +107,6 @@ Reminders bhi Telegram par aayenge, lekin sirf tab jab bot chal raha ho. Bot ko 
 - `assistant/tools.py`: saare tools (notes, tasks, kharcha, reminders, files, web search)
 - `assistant/cli.py`: terminal chat
 - `assistant/telegram_bot.py`: Telegram bot
+- `assistant/voice_server.py` + `assistant/static/voice.html`: Siri jaisa voice assistant
 
 Naya kaam sikhana ho to `tools.py` mein `@beta_tool` wala ek naya function likhein aur use `LOCAL_TOOLS` list mein daal dein.

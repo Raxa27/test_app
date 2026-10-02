@@ -20,10 +20,15 @@ You can:
 
 Act on requests directly using your tools; ask a question only when a missing detail would change the result (for example, a reminder with no time). After using tools, confirm what you did in one or two lines. For relative dates and times, call get_current_time first."""
 
+VOICE_PROMPT = """
+
+This conversation is spoken aloud: the user talks to you through a microphone and your reply is read out by text-to-speech. Keep replies to one to three short sentences, in plain conversational language. Do not use markdown, bullet points, emojis, URLs, or tables. Write numbers and times the way a person would say them. If the user spoke Urdu, reply in Urdu script; if Hindi, in Devanagari; if English, in English."""
+
 
 class Assistant:
-    def __init__(self) -> None:
+    def __init__(self, voice: bool = False) -> None:
         self.client = anthropic.Anthropic()
+        self.system = SYSTEM_PROMPT + (VOICE_PROMPT if voice else "")
         self.messages: list = []
 
     def reset(self) -> None:
@@ -53,7 +58,7 @@ class Assistant:
             runner = self.client.beta.messages.tool_runner(
                 model=MODEL,
                 max_tokens=16000,
-                system=SYSTEM_PROMPT,
+                system=self.system,
                 tools=ALL_TOOLS,
                 messages=self.messages,
                 output_config={"effort": EFFORT},
