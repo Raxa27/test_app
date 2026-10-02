@@ -43,6 +43,9 @@ def main() -> None:
         try:
             print(assistant.ask(text))
             for action in assistant.last_actions:
+                if action["confirm"] and input(f"{action['label']} — confirm? (y/n) ").strip().lower() not in ("y", "yes", "haan", "han", "ji"):
+                    print("Cancelled.")
+                    continue
                 print(f"👉 {action['label']}: {action['url']}")
                 webbrowser.open(action["url"])
         except anthropic.AuthenticationError:

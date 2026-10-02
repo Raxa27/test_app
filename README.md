@@ -11,6 +11,9 @@ Ek AI agent jo aapke kehne par rozana ke kaam karta hai. Urdu, Roman Urdu, Hindi
 | 💰 Kharcha | "aaj 500 ka khana khaya" · "is mahine kitna kharcha hua?" |
 | ⏰ Reminders | "2 ghante baad yaad dilana dawai leni hai" |
 | 🌐 Internet | "aaj Lahore ka mausam?" · "dollar ka rate kya hai?" · "is link ka khulasa karo" |
+| 🎵 YouTube | "Atif Aslam ka Tajdar-e-Haram lagao" · "cricket highlights dikhao" |
+| 📞 Call / SMS | "Ammi ko call karo" · "Ali ko SMS karo ke main late hoon" |
+| 🗺️ Maps / websites | "Badshahi Masjid ka rasta dikhao" · "Dawn news kholo" |
 | 💬 WhatsApp | "Ammi ka number 0300-1234567 save karo" · "Ammi ko WhatsApp karo ke main raste mein hoon" |
 | 📄 Files | "chhutti ki application likh kar save karo" · "meri files dikhao" |
 | ✍️ Likhna | emails, posts, translation, hisaab, planning, sawal jawab |
@@ -59,9 +62,21 @@ Phir **Chrome ya Edge** mein `http://localhost:8000` kholein.
 - Reminder ka waqt aane par ye bol kar yaad dilata hai, jab tak page khula ho.
 - Jawab bolte waqt orb dabayein to wo chup ho jayega.
 
-### WhatsApp messages kaise jaate hain
+### Sensitive kaam: sirf 1 dafa confirmation
 
-Agent message likh kar ek hara **"WhatsApp: Ammi"** button dikhata hai. Use dabane se WhatsApp khulta hai aur message pehle se likha hota hai. Aap sirf **Send** dabate hain. Is ka matlab hai ke koi message aapki marzi ke baghair nahi jaata, aur aapka WhatsApp account ban hone ka khatra bhi nahi.
+| Kaam | Confirmation |
+|---|---|
+| YouTube, Maps, website kholna | Nahi, seedha khul jata hai |
+| Call, WhatsApp, SMS | Haan, **sirf ek dafa** |
+
+Misaal: "Ammi ko call karo"
+1. Agent poochta hai: **"Call karun?"** aur screen par **Haan / Nahi** card aata hai.
+2. Aap bol dein **"haan"** ya **"nahi"**, ya button daba dein.
+3. "Haan" par phone ka dialer number ke saath khul jata hai. WhatsApp aur SMS mein message pehle se likha hota hai.
+
+Agent khud alag se ijazat nahi maangta, is liye har kaam par confirmation sirf ek hi dafa hoti hai.
+
+> Phone ka system security ke liye aakhri tap aap se karwata hai: call ka hara button aur WhatsApp mein Send. Koi bhi browser app is ke baghair call ya message nahi kar sakti.
 
 ### App ki tarah install karein
 

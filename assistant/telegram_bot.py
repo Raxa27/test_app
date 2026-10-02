@@ -49,7 +49,12 @@ class TelegramBot:
         try:
             reply = self.assistant.ask(text)
             for action in self.assistant.last_actions:
-                reply += f"\n\n👉 {action['label']} (tap to open, then Send):\n{action['url']}"
+                if action["type"] in ("call", "sms"):
+                    # Telegram does not open tel:/sms: links, but it makes phone numbers tappable.
+                    reply += f"\n\n👉 {action['label']}: tap the number to confirm\n{action['url'].split(':', 1)[1].split('?')[0]}"
+                else:
+                    hint = "tap to confirm" if action["confirm"] else "tap to open"
+                    reply += f"\n\n👉 {action['label']} ({hint}):\n{action['url']}"
         except anthropic.RateLimitError:
             reply = "Rate limited. Please try again in a minute."
         except anthropic.APIConnectionError:

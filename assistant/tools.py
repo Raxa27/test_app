@@ -289,9 +289,29 @@ def list_contacts() -> str:
     return "\n".join(f"{c['name']}: +{c['phone']}" for c in sorted(contacts, key=lambda c: c["name"].lower()))
 
 
+def _resolve_recipient(to: str) -> tuple[str, str] | str:
+    """Return (number, label) for a saved contact name or phone number, or an error message."""
+    contact = _find_contact(to)
+    if contact:
+        return contact["phone"], contact["name"]
+    if sum(ch.isdigit() for ch in to) >= 10:
+        return _normalize_phone(to), to
+    return f'No saved contact named "{to}". Ask the user for the number, then call save_contact.'
+
+
+def _add_action(kind: str, label: str, url: str, confirm: bool) -> str:
+    PENDING_ACTIONS.append({"type": kind, "label": label, "url": url, "confirm": confirm})
+    if confirm:
+        return (
+            f"Ready: {label}. The app will ask the user once to confirm before doing it. "
+            "End your reply with one short confirmation question in the user's language (e.g. \"Call karun?\")."
+        )
+    return f"Opened: {label}."
+
+
 @beta_tool
 def send_whatsapp(message: str, to: str = "") -> str:
-    """Prepare a WhatsApp message. The user gets a button that opens WhatsApp with the message filled in; they tap Send there.
+    """Send a WhatsApp message. Opens WhatsApp with the message filled in, after the user confirms once.
 
     Write the message exactly as it should be sent, in the language the user wants.
 
@@ -301,16 +321,73 @@ def send_whatsapp(message: str, to: str = "") -> str:
     """
     number, label = "", "WhatsApp"
     if to:
-        contact = _find_contact(to)
-        if contact:
-            number, label = contact["phone"], contact["name"]
-        elif sum(ch.isdigit() for ch in to) >= 10:
-            number, label = _normalize_phone(to), to
-        else:
-            return f'No saved contact named "{to}". Ask the user for the number (then save_contact), or call again with to="" so they can pick the chat in WhatsApp.'
-    url = f"https://wa.me/{number}?text={quote(message)}"
-    PENDING_ACTIONS.append({"type": "whatsapp", "label": f"WhatsApp: {label}", "url": url})
-    return f"WhatsApp message ready for {label}. The user will see a button to open WhatsApp and tap Send."
+        resolved = _resolve_recipient(to)
+        if isinstance(resolved, str):
+            return resolved + ' Or call again with to="" so they can pick the chat in WhatsApp.'
+        number, label = resolved
+    return _add_action("whatsapp", f"WhatsApp: {label}", f"https://wa.me/{number}?text={quote(message)}", confirm=True)
+
+
+@beta_tool
+def make_call(to: str) -> str:
+    """Phone call someone. The phone's dialer opens after the user confirms once.
+
+    Args:
+        to: A saved contact name or a phone number.
+    """
+    resolved = _resolve_recipient(to)
+    if isinstance(resolved, str):
+        return resolved
+    number, label = resolved
+    return _add_action("call", f"Call: {label}", f"tel:+{number}", confirm=True)
+
+
+@beta_tool
+def send_sms(to: str, message: str) -> str:
+    """Send a text message (SMS). The messages app opens with the text filled in, after the user confirms once.
+
+    Args:
+        to: A saved contact name or a phone number.
+        message: The full message text.
+    """
+    resolved = _resolve_recipient(to)
+    if isinstance(resolved, str):
+        return resolved
+    number, label = resolved
+    return _add_action("sms", f"SMS: {label}", f"sms:+{number}?body={quote(message)}", confirm=True)
+
+
+@beta_tool
+def open_youtube(query: str) -> str:
+    """Open YouTube with a search, e.g. a song, video, or channel.
+
+    Args:
+        query: What to search for, e.g. "Atif Aslam Tajdar-e-Haram".
+    """
+    return _add_action("open", f"YouTube: {query}", f"https://www.youtube.com/results?search_query={quote(query)}", confirm=False)
+
+
+@beta_tool
+def open_maps(destination: str) -> str:
+    """Open Google Maps with directions to a place.
+
+    Args:
+        destination: Place name or address, e.g. "Badshahi Mosque Lahore".
+    """
+    url = f"https://www.google.com/maps/dir/?api=1&destination={quote(destination)}"
+    return _add_action("open", f"Maps: {destination}", url, confirm=False)
+
+
+@beta_tool
+def open_website(url: str) -> str:
+    """Open a website for the user, e.g. a news site, Google search, or a link they asked for.
+
+    Args:
+        url: Full http(s) address.
+    """
+    if not url.startswith(("https://", "http://")):
+        return "Only http(s) links can be opened."
+    return _add_action("open", url, url, confirm=False)
 
 
 # ---------- Files (sandboxed to data/files) ----------
@@ -376,7 +453,8 @@ LOCAL_TOOLS = [
     add_task, list_tasks, complete_task,
     add_expense, expense_summary, delete_expense,
     add_reminder, list_reminders, cancel_reminder,
-    save_contact, list_contacts, send_whatsapp,
+    save_contact, list_contacts, send_whatsapp, make_call, send_sms,
+    open_youtube, open_maps, open_website,
     write_file, read_file, list_files,
 ]
 
