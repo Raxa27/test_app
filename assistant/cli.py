@@ -6,7 +6,7 @@ import webbrowser
 
 import anthropic
 
-from .agent import Assistant
+from .agent import AssistantError, create_assistant
 from .tools import pop_due_reminders
 
 HELP = "Commands: /reset (new conversation), /exit (quit). Anything else goes to the assistant."
@@ -20,7 +20,7 @@ def _reminder_loop() -> None:
 
 
 def main() -> None:
-    assistant = Assistant()
+    assistant = create_assistant()
     threading.Thread(target=_reminder_loop, daemon=True).start()
     print("Zuzu ready. " + HELP)
     while True:
@@ -48,6 +48,8 @@ def main() -> None:
                     continue
                 print(f"👉 {action['label']}: {action['url']}")
                 webbrowser.open(action["url"])
+        except AssistantError as e:
+            print(e)
         except anthropic.AuthenticationError:
             print("API key is missing or invalid. Set ANTHROPIC_API_KEY.")
         except anthropic.RateLimitError:

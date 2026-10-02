@@ -25,7 +25,9 @@ Aapka saara data (notes, kharcha, reminders, files) aapke computer par `data/` f
 ## Setup (ek dafa)
 
 1. Python 3.10+ install karein.
-2. Claude API key lein: https://console.anthropic.com → API Keys.
+2. API key lein, dono mein se koi ek:
+   - **Claude** (paid): https://console.anthropic.com → API Keys → `ANTHROPIC_API_KEY`
+   - **Gemini** (free plan): https://aistudio.google.com → Get API key → `GEMINI_API_KEY`
 3. Install karein:
    ```bash
    pip install -r requirements.txt
@@ -125,7 +127,9 @@ Reminders bhi Telegram par aayenge, lekin sirf tab jab bot chal raha ho. Bot ko 
 
 | Variable | Default | Matlab |
 |---|---|---|
-| `ASSISTANT_MODEL` | `claude-opus-5-5` | Kaunsa Claude model istemal ho |
+| `ASSISTANT_PROVIDER` | khud chunta hai | `claude` ya `gemini`. Sirf Gemini key ho to Gemini khud chal jata hai |
+| `ASSISTANT_MODEL` | `claude-opus-5-5` | Kaunsa Claude model istemal ho (`sonnet` bhi likh sakte hain) |
+| `GEMINI_MODEL` | `gemini-flash-latest` | Kaunsa Gemini model istemal ho |
 | `ASSISTANT_EFFORT` | `medium` | `low` = tez aur sasta, `high` = zyada soch kar jawab |
 | `ASSISTANT_DATA_DIR` | `./data` | Data kahan save ho |
 | `ASSISTANT_TIMEZONE` | computer ka time zone | Misaal `Asia/Karachi`; server par reminders sahi waqt par bajane ke liye |

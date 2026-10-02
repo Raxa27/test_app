@@ -13,7 +13,7 @@ import sys
 import anthropic
 import httpx2 as httpx
 
-from .agent import Assistant
+from .agent import AssistantError, create_assistant
 from .tools import pop_due_reminders
 
 log = logging.getLogger("telegram_bot")
@@ -25,7 +25,7 @@ class TelegramBot:
         self.api = f"https://api.telegram.org/bot{token}"
         self.allowed_chat_id = allowed_chat_id
         self.http = httpx.Client(timeout=POLL_TIMEOUT + 10)
-        self.assistant = Assistant()
+        self.assistant = create_assistant()
 
     def send(self, chat_id: int | str, text: str) -> None:
         # Telegram caps messages at 4096 characters.
@@ -55,6 +55,8 @@ class TelegramBot:
                 else:
                     hint = "tap to confirm" if action["confirm"] else "tap to open"
                     reply += f"\n\n👉 {action['label']} ({hint}):\n{action['url']}"
+        except AssistantError as e:
+            reply = str(e)
         except anthropic.RateLimitError:
             reply = "Rate limited. Please try again in a minute."
         except anthropic.APIConnectionError:

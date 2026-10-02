@@ -19,7 +19,7 @@ from pathlib import Path
 
 import anthropic
 
-from .agent import Assistant
+from .agent import AssistantError, create_assistant
 from .tools import pop_due_reminders
 
 log = logging.getLogger("voice_server")
@@ -34,7 +34,7 @@ STATIC_FILES = {
 PASSWORD = os.environ.get("ASSISTANT_PASSWORD", "")
 MAX_BODY = 20_000
 
-assistant = Assistant(voice=True)
+assistant = create_assistant(voice=True)
 assistant_lock = threading.Lock()
 
 
@@ -98,6 +98,8 @@ class Handler(BaseHTTPRequestHandler):
             with assistant_lock:
                 reply = assistant.ask(text)
                 actions = assistant.last_actions
+        except AssistantError as e:
+            return self._json(502, {"error": str(e)})
         except anthropic.AuthenticationError:
             return self._json(500, {"error": "API key is missing or invalid."})
         except anthropic.RateLimitError:

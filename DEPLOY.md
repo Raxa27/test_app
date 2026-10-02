@@ -18,6 +18,9 @@ Service par click karein → **Settings** → **Source** → **Branch** mein `cl
 (Agar ye code `main` mein merge ho chuka hai to `main` hi rehne dein.)
 
 ### 3. Variables daalein
+
+> 💸 **Paise nahi kharch karne?** Claude ki jagah **Gemini (free)** istemal karein. Neeche "Free tareeqa: Gemini" dekhein. Us surat mein `ANTHROPIC_API_KEY` ki jagah `GEMINI_API_KEY` daalein.
+
 Service → **Variables** → **New Variable**. Ye chaar variables daalein:
 
 | Naam | Value | Matlab |
@@ -68,6 +71,26 @@ Ye bilkul app ki tarah icon se khulegi.
 > ⚠️ Zip mein ek `signing-key-info.txt` aur `.keystore` file bhi hoti hai. Inhein sambhaal kar rakhein. App update karne ke liye inhi ki zaroorat padegi.
 
 ---
+
+## Free tareeqa: Gemini
+
+Claude API ke liye credits khareedne padte hain. Agar paise nahi lagane to Zuzu **Google Gemini** par bhi chalta hai, jis ka free plan hai aur card nahi chahiye.
+
+1. Phone par **aistudio.google.com** kholein aur Google account se login karein.
+2. **Get API key** → **Create API key** dabayein aur key copy karein (`AIza...` se shuru hoti hai).
+3. Railway → **Variables** mein:
+
+   | Naam | Value |
+   |---|---|
+   | `GEMINI_API_KEY` | `AIza...` wali key |
+
+   `ANTHROPIC_API_KEY` wala variable **delete** kar dein. Dono hon to Zuzu Claude istemal karta hai. Ya phir `ASSISTANT_PROVIDER` = `gemini` daal dein.
+4. **Deploy** dabayein.
+
+Free plan ki baatein:
+- Har minute aur har din sawalon ki ek hadd hoti hai. Hadd poori ho to Zuzu kehta hai "Free limit poori ho gayi", phir thodi der baad dobara chal jata hai.
+- Free plan mein Google aapke sawal apne AI ko behtar banane ke liye istemal kar sakta hai, is liye bohat zaati maloomat na batayein.
+- Agar kabhi "model not found" error aaye to `GEMINI_MODEL` variable mein AI Studio par likha naya model naam daalein (default `gemini-flash-latest`).
 
 ## Kharcha
 - **Railway Hobby:** aapke plan mein shaamil credit mein ye chhota server aaram se chal jata hai.
