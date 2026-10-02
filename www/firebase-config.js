@@ -13,3 +13,7 @@ window.FF_FIREBASE_CONFIG = {
   appId: "1:1234567890:web:abc123",
 };
 */
+
+// How players reach you for a login. Shown on the login page and on every locked tool.
+// Example: { label: "WhatsApp", value: "+92 300 1234567", href: "https://wa.me/923001234567" }
+window.FF_ADMIN_CONTACT = { label: "", value: "", href: "" };

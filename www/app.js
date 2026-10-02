@@ -78,19 +78,24 @@ function syncRange(el, fmt) {
 /* ---------- Tools & routing ---------- */
 const TOOLS = [
   { id: "sens", name: "Sensitivity", sub: "Settings tuned to your device and playstyle", color: "#ff8a1f" },
+  { id: "gfx", name: "Graphics Settings", sub: "Graphics, FPS and shadow setup for your phone", color: "#c084fc" },
   { id: "dmg", name: "Damage Calculator", sub: "Headshot and body damage, shots to kill, TTK", color: "#f87171" },
   { id: "cmp", name: "Weapon Compare", sub: "Any two guns, stat by stat", color: "#60a5fa" },
   { id: "chars", name: "Character Combo", sub: "Best skills and pet for your role", color: "#a78bfa" },
+  { id: "aim", name: "Aim Trainer", sub: "30-second tap drill for speed and accuracy", color: "#fb7185" },
+  { id: "react", name: "Reaction Test", sub: "Measure your reaction time in milliseconds", color: "#facc15" },
   { id: "stats", name: "Match Stats", sub: "Kills, K/D, Booyah rate and progress", color: "#34d399" },
   { id: "tour", name: "Tournament", sub: "Points table for custom rooms", color: "#ffbe2e" },
+  { id: "teams", name: "Team Maker", sub: "Random teams and roles for custom rooms", color: "#38bdf8" },
+  { id: "drop", name: "Drop Spot Picker", sub: "Random Bermuda landing spot for your squad", color: "#4ade80" },
+  { id: "practice", name: "Practice Planner", sub: "Daily drills and a practice streak", color: "#2dd4bf" },
   { id: "budget", name: "Diamond Planner", sub: "Plan your diamond goals and top-ups", color: "#22d3ee" },
   { id: "names", name: "Stylish Names", sub: "Nicknames with fancy fonts and symbols", color: "#f472b6" },
-  { id: "codes", name: "Redeem Codes", sub: "Save codes and track expiry", color: "#fb923c" },
 ];
 $("toolGrid").innerHTML = TOOLS.map((t, i) => `
   <a class="tool" href="#${t.id}" style="--tc:${t.color};--i:${i}">
     <span class="ico">${icon(t.id)}</span>
-    <span class="go">${icon("arrow")}</span>
+    <span class="go">${icon("arrow")}</span><span class="lockmark">${icon("lock")}</span>
     <h4>${t.name}</h4><p>${t.sub}</p>
   </a>`).join("");
 $("sideNav").innerHTML = `<a class="nav-link" href="#home" data-id="home"><span class="ico">${icon("home")}</span>Home</a>` +
@@ -99,12 +104,34 @@ $("sideNav").innerHTML = `<a class="nav-link" href="#home" data-id="home"><span 
 const PAGES = { login: { name: "Log in", sub: "Sync your data across devices" }, account: { name: "Account", sub: "Profile and cloud sync" } };
 
 const onShow = {};
+/* Demo mode: tool pages are blurred and inert behind a "contact admin" card until someone logs in. */
+function setLock(p, locked) {
+  let card = p.querySelector(":scope > .lock-card");
+  if (locked && !card) {
+    card = document.createElement("div");
+    card.className = "lock-card";
+    card.innerHTML = `<span class="lock-ico">${icon("lock")}</span><h3>Members only</h3>
+      <p>You're viewing the demo. Contact the admin to get a login and unlock every tool.</p>
+      <div class="contact-line" data-contact></div>
+      <a class="btn btn-block" href="#login">${icon("user")}Log in</a>`;
+    p.appendChild(card);
+  }
+  if (card) {
+    card.hidden = !locked;
+    const c = card.querySelector("[data-contact]"), html = window.FFAuth ? window.FFAuth.contactHtml() : "";
+    c.innerHTML = html; c.hidden = !html;
+  }
+  [...p.children].forEach((el) => { if (el !== card) el.inert = locked; });
+}
 function route() {
   const id = (location.hash.slice(1) || "home");
   const page = $(id) && $(id).classList.contains("page") ? id : "home";
-  if (window.FFAuth && window.FFAuth.gate(page)) return;
   const tool = TOOLS.find((t) => t.id === page) || PAGES[page];
+  const locked = !(window.FFAuth && window.FFAuth.user);
+  document.body.classList.toggle("locked", locked);
+  if (TOOLS.some((t) => t.id === page)) setLock($(page), locked);
   document.querySelectorAll(".page").forEach((p) => {
+    if (p.id === page && p.classList.contains("active")) return; // re-render without replaying the entrance
     p.classList.remove("active");
     if (p.id === page) {
       [...p.children].forEach((c, i) => c.style.setProperty("--i", i));
@@ -116,7 +143,8 @@ function route() {
   $("pageTitle").textContent = tool ? tool.name : "Dashboard";
   $("pageSub").textContent = tool ? tool.sub : "All your Free Fire tools";
   document.title = tool ? `${tool.name} · FF Toolkit` : "FF Toolkit";
-  window.scrollTo(0, 0);
+  if (route.last !== page) window.scrollTo(0, 0);
+  route.last = page;
   if (onShow[page]) onShow[page]();
 }
 window.addEventListener("hashchange", route);
@@ -491,67 +519,240 @@ $("n_in").oninput = renderNames;
 $("n_out").onclick = (e) => { const b = e.target.closest("[data-copy]"); if (b) copy(nameList[+b.dataset.copy], b); };
 onShow.names = renderNames;
 
-/* ---------- Redeem codes ---------- */
-let codes = load("codes", []);
-function renderCodes() {
-  const today = new Date().toISOString().slice(0, 10);
-  $("r_list").innerHTML = codes.length ? codes.map((c, i) => {
-    const exp = c.exp && c.exp < today;
-    const status = c.used ? '<span class="pill mute">Used</span>' : exp ? '<span class="pill bad">Expired</span>' : '<span class="pill ok">Active</span>';
-    return `<div class="item ${c.used || exp ? "dim" : ""}" style="--i:${i}"><span class="badge">${icon("codes")}</span>
-      <div class="grow"><div class="title"><span style="font-family:var(--display);letter-spacing:1px">${esc(c.code)}</span> ${status}</div>
-      <div class="meta">${c.exp ? (exp ? "Expired " : "Expires ") + esc(c.exp) : "No expiry date"}</div></div>
-      <div class="actions"><button class="icon-btn" data-copy="${i}" aria-label="Copy">${icon("copy")}</button>
-      <button class="icon-btn" data-use="${i}" aria-label="${c.used ? "Mark unused" : "Mark used"}">${icon(c.used ? "undo" : "check")}</button>
-      <button class="icon-btn danger" data-del="${i}" aria-label="Delete">${icon("trash")}</button></div></div>`;
-  }).join("") : `<div class="empty">${icon("codes")}No codes saved yet</div>`;
-}
-$("r_add").onclick = () => {
-  const code = $("r_code").value.trim().toUpperCase();
-  if (!/^[A-Z0-9]{6,20}$/.test(code)) return toast("Codes are 6–20 letters or numbers", false);
-  if (codes.some((c) => c.code === code)) return toast("That code is already saved", false);
-  codes.unshift({ code, exp: $("r_exp").value, used: false }); save("codes", codes);
-  $("r_code").value = ""; $("r_exp").value = ""; renderCodes(); toast("Code saved");
-};
-$("r_list").onclick = (e) => {
-  const b = e.target.closest("button"); if (!b) return;
-  const d = b.dataset;
-  if (d.copy !== undefined) return copy(codes[+d.copy].code, b);
-  if (d.del !== undefined) codes.splice(+d.del, 1);
-  else if (d.use !== undefined) codes[+d.use].used = !codes[+d.use].used;
-  else return;
-  save("codes", codes); renderCodes();
-};
-onShow.codes = renderCodes;
-
 /* ---------- Home ---------- */
 onShow.home = () => {
-  const s = statSummary(), today = new Date().toISOString().slice(0, 10);
-  const active = codes.filter((c) => !c.used && !(c.exp && c.exp < today)).length;
-  kpis($("homeStats"), [["Matches", s.n, 0], ["K/D", s.kd, 2, true], ["Active codes", active, 0]]);
+  const s = statSummary();
+  kpis($("homeStats"), [["Matches", s.n, 0], ["K/D", s.kd, 2, true], ["Aim best", load("aim_best", 0), 0]]);
 };
 
+/* ---------- Graphics settings ---------- */
+function renderGfx() {
+  syncRange($("g_ram"), (v) => v + " GB");
+  const ram = num("g_ram"), hz = +radio("g_hz"), pri = radio("g_pri");
+  const hi = ram >= 6, mid = ram >= 4;
+  const fpsTop = hz >= 90 && hi ? "Ultra" : "High";
+  const rec = {
+    perf: { gfx: "Smooth", fps: fpsTop, shadow: "Off", res: hi ? "On" : "Off" },
+    bal: { gfx: hi ? "Standard" : "Smooth", fps: mid ? "High" : "Normal", shadow: hi ? "On" : "Off", res: mid ? "On" : "Off" },
+    vis: { gfx: ram >= 8 ? "Ultra" : hi ? "Standard" : "Smooth", fps: hi ? "High" : "Normal", shadow: mid ? "On" : "Off", res: "On" },
+  }[pri];
+  const items = [["Graphics", rec.gfx, "gfx"], ["High FPS", rec.fps, "react"], ["Shadow", rec.shadow, "sens"], ["High resolution", rec.res, "aim"]];
+  $("g_out").innerHTML = items.map(([l, v, ic], i) => `<div class="set-item" style="--i:${i}"><span class="set-ico">${icon(ic)}</span><span>${l}</span><b>${v}</b></div>`).join("");
+  const tips = [
+    ram <= 3 ? "Your phone has little RAM. Close every other app before you play." : "Close apps running in the background before a match.",
+    "Turn off battery saver; it caps FPS.",
+    hz >= 90 ? `Set your phone's display to ${hz} Hz in system settings so High FPS can use it.` : "Your screen runs at 60 Hz, so higher FPS settings won't look smoother.",
+    "If the phone heats up, drop one graphics level. Steady FPS beats high FPS that stutters.",
+  ];
+  $("g_tips").innerHTML = tips.map((t, i) => `<li style="--i:${i}">${t}</li>`).join("");
+}
+document.querySelectorAll("#gfx input").forEach((el) => el.addEventListener("input", renderGfx));
+onShow.gfx = renderGfx;
+
+/* ---------- Aim trainer ---------- */
+const AIM_TIME = 30;
+let aim = null;
+function aimHud(s = { hits: 0, miss: 0, left: AIM_TIME }) {
+  const acc = s.hits + s.miss ? (s.hits / (s.hits + s.miss)) * 100 : 0;
+  kpis($("aim_hud"), [["Time left", s.left, 0], ["Hits", s.hits, 0, true], ["Accuracy %", acc, 0], ["Best", load("aim_best", 0), 0, true]]);
+}
+function aimSpawn() {
+  const arena = $("aim_arena"), r = arena.getBoundingClientRect();
+  const size = Math.max(26, 56 - aim.hits * 0.8);
+  const t = document.createElement("button");
+  t.type = "button"; t.className = "target"; t.setAttribute("aria-label", "Target");
+  t.style.cssText = `width:${size}px;height:${size}px;left:${Math.random() * (r.width - size)}px;top:${Math.random() * (r.height - size)}px`;
+  arena.appendChild(t);
+}
+function aimEnd() {
+  clearInterval(aim.timer);
+  $("aim_arena").querySelectorAll(".target").forEach((t) => t.remove());
+  const best = load("aim_best", 0), acc = aim.hits + aim.miss ? Math.round((aim.hits / (aim.hits + aim.miss)) * 100) : 0;
+  const isBest = aim.hits > best;
+  if (isBest) save("aim_best", aim.hits);
+  $("aim_msg").innerHTML = `<b>${isBest ? "New best! " : ""}${aim.hits} hits</b><p>Accuracy ${acc}% · ${aim.hits ? (AIM_TIME / aim.hits).toFixed(2) : "—"}s per hit</p>
+    <button class="btn" id="aim_start" type="button">Play again</button>`;
+  $("aim_msg").hidden = false; $("aim_start").onclick = aimStart;
+  aimHud({ hits: aim.hits, miss: aim.miss, left: 0 });
+  aim = null;
+}
+function aimStart() {
+  aim = { hits: 0, miss: 0, left: AIM_TIME };
+  $("aim_msg").hidden = true;
+  aimHud(aim); aimSpawn();
+  aim.timer = setInterval(() => { aim.left--; aimHud(aim); if (aim.left <= 0) aimEnd(); }, 1000);
+}
+$("aim_arena").addEventListener("pointerdown", (e) => {
+  if (!aim) return;
+  const t = e.target.closest(".target");
+  if (t) {
+    aim.hits++;
+    const r = $("aim_arena").getBoundingClientRect(), fx = document.createElement("span");
+    fx.className = "hitfx"; fx.style.left = e.clientX - r.left + "px"; fx.style.top = e.clientY - r.top + "px";
+    $("aim_arena").appendChild(fx); setTimeout(() => fx.remove(), 450);
+    t.remove(); aimSpawn();
+  } else aim.miss++;
+  aimHud(aim);
+});
+$("aim_start").onclick = aimStart;
+onShow.aim = () => { if (!aim) aimHud(); };
+
+/* ---------- Reaction test ---------- */
+const REACT_ROUNDS = 5;
+let rx = { state: "idle", times: [], t0: 0, timer: null };
+function reactKpis() {
+  const avg = rx.times.length ? rx.times.reduce((a, b) => a + b, 0) / rx.times.length : 0;
+  kpis($("r_kpis"), [["Round", Math.min(rx.times.length, REACT_ROUNDS), 0], ["Average ms", avg, 0, true], ["Fastest ms", rx.times.length ? Math.min(...rx.times) : 0, 0], ["Best avg ms", load("react_best", 0), 0, true]]);
+  $("r_hist").innerHTML = rx.times.length ? rx.times.map((t, i) => `<span class="pill ${t < 250 ? "ok" : t < 350 ? "gold" : "mute"}" style="--i:${i}">#${i + 1} · ${t} ms</span>`).join("")
+    : `<p class="note" style="margin:0">Your round times will show up here.</p>`;
+}
+const rating = (ms) => ms < 200 ? "Pro reflexes" : ms < 250 ? "Great" : ms < 300 ? "Good" : ms < 350 ? "Average" : "Keep practicing";
+function reactSet(state, big, sub) { rx.state = state; $("r_pad").dataset.state = state; $("r_big").textContent = big; $("r_sub").textContent = sub; }
+function reactArm() {
+  reactSet("wait", "Wait for green…", `Round ${rx.times.length + 1} of ${REACT_ROUNDS}`);
+  rx.timer = setTimeout(() => { rx.t0 = performance.now(); reactSet("go", "TAP!", ""); }, 1200 + Math.random() * 2600);
+}
+$("r_pad").addEventListener("pointerdown", () => {
+  if (rx.state === "idle" || rx.state === "done") { rx.times = []; reactKpis(); return reactArm(); }
+  if (rx.state === "wait") { clearTimeout(rx.timer); return reactSet("early", "Too soon!", "Tap to retry this round"); }
+  if (rx.state === "early") return reactArm();
+  if (rx.state === "go") {
+    const ms = Math.round(performance.now() - rx.t0);
+    rx.times.push(ms); reactKpis();
+    if (rx.times.length >= REACT_ROUNDS) {
+      const avg = Math.round(rx.times.reduce((a, b) => a + b, 0) / rx.times.length), best = load("react_best", 0);
+      if (!best || avg < best) { save("react_best", avg); reactKpis(); }
+      return reactSet("done", `${avg} ms average`, `${rating(avg)}${!best || avg < best ? " · new best!" : ""} · Tap to play again`);
+    }
+    reactSet("result", `${ms} ms`, "Tap for the next round");
+    return;
+  }
+  if (rx.state === "result") reactArm();
+});
+onShow.react = reactKpis;
+
+/* ---------- Drop spot picker ---------- */
+const BERMUDA = ["Clock Tower", "Peak", "Pochinok", "Mars Electric", "Factory", "Bimasakti Strip", "Mill", "Shipyard", "Hangar", "Rim Nam Village",
+  "Katulistiwa", "Sentosa", "Plantation", "Riverside", "Cape Town", "Observatory", "Graveyard", "Nurek Dam", "Power Plant"];
+let dropCustom = [], dropOff = [];
+const dropSpots = () => [...BERMUDA, ...dropCustom];
+function renderDrop() {
+  const all = dropSpots(), on = all.filter((s) => !dropOff.includes(s));
+  $("dr_count").textContent = `${on.length} of ${all.length}`;
+  $("dr_list").innerHTML = all.map((s, i) => `<label><input type="checkbox" data-spot="${i}" ${dropOff.includes(s) ? "" : "checked"}><span>${esc(s)}</span></label>`).join("");
+}
+$("dr_list").addEventListener("change", (e) => {
+  const s = dropSpots()[+e.target.dataset.spot];
+  dropOff = e.target.checked ? dropOff.filter((x) => x !== s) : [...dropOff, s];
+  save("drop_off", dropOff); renderDrop();
+});
+$("dr_add").onclick = () => {
+  const s = $("dr_new").value.trim().slice(0, 24);
+  if (!s) return toast("Type a spot name first", false);
+  if (dropSpots().some((x) => x.toLowerCase() === s.toLowerCase())) return toast("That spot is already in the list", false);
+  dropCustom.push(s); save("drop_custom", dropCustom); $("dr_new").value = ""; renderDrop(); toast(`${s} added`);
+};
+$("dr_new").addEventListener("keydown", (e) => { if (e.key === "Enter") $("dr_add").click(); });
+$("dr_spin").onclick = () => {
+  const on = dropSpots().filter((s) => !dropOff.includes(s)), out = $("dr_out");
+  if (!on.length) return toast("Turn on at least one spot", false);
+  const pick = on[Math.floor(Math.random() * on.length)];
+  $("dr_spin").disabled = true; out.classList.remove("landed");
+  let n = 0; const steps = reduceMotion ? 0 : 18;
+  const tick = () => {
+    if (n++ < steps) { out.textContent = on[Math.floor(Math.random() * on.length)]; setTimeout(tick, 40 + n * n * 1.2); return; }
+    out.textContent = pick; out.classList.add("landed"); $("dr_spin").disabled = false;
+  };
+  tick();
+};
+onShow.drop = renderDrop;
+
+/* ---------- Team maker ---------- */
+const ROLES = ["Rusher", "Support", "Sniper", "IGL"];
+let teamText = "";
+function makeTeams() {
+  const names = $("tm_names").value.split("\n").map((s) => s.trim()).filter(Boolean).slice(0, 100);
+  save("team_names", $("tm_names").value.slice(0, 2000));
+  if (names.length < 2) { $("tm_out").innerHTML = `<div class="empty">${icon("teams")}Add at least two players</div>`; teamText = ""; return; }
+  for (let i = names.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [names[i], names[j]] = [names[j], names[i]]; }
+  const size = +radio("tm_size"), roles = $("tm_roles").checked && size > 1, teams = [];
+  for (let i = 0; i < names.length; i += size) teams.push(names.slice(i, i + size));
+  $("tm_out").innerHTML = teams.map((t, i) => `<div class="team" style="--i:${i}"><div class="team-head"><b>Team ${i + 1}</b><span class="pill mute">${t.length}/${size}</span></div>
+    ${t.map((n, j) => `<div class="member"><span class="avatar sm" style="--h:${hue(n)}">${esc(n.charAt(0).toUpperCase())}</span><span>${esc(n)}</span>${roles ? `<span class="pill ${["gold", "ok", "info", "violet"][j % 4]}">${ROLES[j % 4]}</span>` : ""}</div>`).join("")}</div>`).join("");
+  teamText = teams.map((t, i) => `Team ${i + 1}: ` + t.map((n, j) => roles ? `${n} (${ROLES[j % 4]})` : n).join(", ")).join("\n");
+}
+$("tm_go").onclick = makeTeams;
+$("tm_copy").onclick = (e) => teamText ? copy(teamText) : toast("Shuffle teams first", false);
+onShow.teams = () => { if (!$("tm_out").children.length) makeTeams(); };
+
+/* ---------- Practice planner ---------- */
+const DRILLS = [
+  ["Headshot warm-up", "50 headshots on training dummies with an SMG"],
+  ["Drag shots", "20 drag headshots with the M1887 or M1014"],
+  ["Gloo wall speed", "20 quick gloo walls while moving"],
+  ["Sniper flicks", "15 quick-scope hits with AWM or M82B"],
+  ["Movement", "5 minutes of jump-shots and crouch spam"],
+  ["Real fights", "3 Lone Wolf or Clash Squad matches"],
+];
+const today = () => new Date().toISOString().slice(0, 10);
+let practice = { day: "", done: [], streak: 0, best: 0, last: "" };
+function practiceDay() {
+  if (practice.day === today()) return;
+  const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+  if (practice.last !== y && practice.last !== today()) practice.streak = 0; // missed a day
+  practice.day = today(); practice.done = [];
+}
+function renderPractice() {
+  practiceDay();
+  const n = practice.done.length;
+  kpis($("p_kpis"), [["Done today", n, 0], ["Of drills", DRILLS.length, 0], ["Streak (days)", practice.streak, 0, true], ["Best streak", practice.best, 0, true]]);
+  $("p_date").textContent = new Date().toLocaleDateString([], { weekday: "long", day: "numeric", month: "short" });
+  $("p_list").innerHTML = DRILLS.map(([t, d], i) => `<label class="item drill" style="--i:${i}"><input type="checkbox" data-drill="${i}" ${practice.done.includes(i) ? "checked" : ""}>
+    <span class="tick">${icon("check")}</span><div class="grow"><div class="title">${t}</div><div class="meta">${d}</div></div></label>`).join("");
+}
+$("p_list").addEventListener("change", (e) => {
+  const i = +e.target.dataset.drill;
+  practiceDay();
+  const wasDone = practice.done.length === DRILLS.length;
+  practice.done = e.target.checked ? [...new Set([...practice.done, i])] : practice.done.filter((x) => x !== i);
+  const allDone = practice.done.length === DRILLS.length;
+  if (allDone && !wasDone) { practice.streak++; practice.last = today(); practice.best = Math.max(practice.best, practice.streak); toast(`All drills done! ${practice.streak}-day streak`); }
+  if (!allDone && wasDone) { practice.streak = Math.max(0, practice.streak - 1); practice.last = practice.streak ? new Date(Date.now() - 864e5).toISOString().slice(0, 10) : ""; }
+  save("practice", practice); renderPractice();
+});
+onShow.practice = renderPractice;
+
+/* Extra synced keys for the newer tools */
+const EXTRA_KEYS = ["aim_best", "react_best", "drop_custom", "drop_off", "team_names", "practice"];
+function loadExtras() {
+  dropCustom = load("drop_custom", []); dropOff = load("drop_off", []);
+  practice = { day: "", done: [], streak: 0, best: 0, last: "", ...load("practice", {}) };
+  $("tm_names").value = load("team_names", "Raxa\nAli\nSam\nZed\nNova\nKai\nRio\nMax");
+}
+loadExtras();
+
 /* ---------- State API used by auth.js for cloud sync ---------- */
-const SYNC_KEYS = ["matches", "tour", "goals", "codes", "weapons_v2", "b_b_have", "b_b_rate"];
+const SYNC_KEYS = ["matches", "tour", "goals", "weapons_v2", "b_b_have", "b_b_rate"];
 window.FF = {
   route, toast,
-  isGuest: () => load("guest", false),
-  setGuest: (v) => { try { localStorage.setItem("guest", JSON.stringify(!!v)); } catch {} },
-  exportState: () => ({ matches, tour, goals, codes, weapons: weapons, b_have: $("b_have").value, b_rate: $("b_rate").value }),
-  hasData: (d) => !!d && ["matches", "goals", "codes"].some((k) => Array.isArray(d[k]) && d[k].length) || !!(d && d.tour && d.tour.teams && d.tour.teams.length),
+  copy,
+  exportState: () => ({ matches, tour, goals, weapons: weapons, b_have: $("b_have").value, b_rate: $("b_rate").value,
+    extra: Object.fromEntries(EXTRA_KEYS.map((k) => [k, load(k, null)])) }),
   importState(d) {
+    if (d.extra && typeof d.extra === "object") EXTRA_KEYS.forEach((k) => { if (d.extra[k] != null) save(k, d.extra[k]); });
+    loadExtras();
     if (Array.isArray(d.matches)) { matches = cleanMatches(d.matches); save("matches", matches); }
     if (d.tour && Array.isArray(d.tour.teams)) { tour = d.tour; save("tour", tour); }
     if (Array.isArray(d.goals)) { goals = d.goals.filter((g) => g && g.name).map((g) => ({ name: String(g.name).slice(0, 40), cost: Math.max(0, +g.cost || 0) })); save("goals", goals); }
-    if (Array.isArray(d.codes)) { codes = d.codes.filter((c) => c && c.code).map((c) => ({ code: String(c.code).slice(0, 20), exp: String(c.exp || ""), used: !!c.used })); save("codes", codes); }
     if (Array.isArray(d.weapons) && d.weapons.length) { weapons = d.weapons; save("weapons_v2", weapons); }
     if (d.b_have != null) { $("b_have").value = d.b_have; save("b_b_have", d.b_have); }
     if (d.b_rate != null) { $("b_rate").value = d.b_rate; save("b_b_rate", d.b_rate); }
     fillWeaponSelects(); renderWeaponEditor(); route();
   },
   clearLocal() {
-    SYNC_KEYS.forEach((k) => { try { localStorage.removeItem(k); } catch {} });
-    matches = []; tour = { teams: [] }; goals = []; codes = []; weapons = clone(DEFAULT_WEAPONS);
+    [...SYNC_KEYS, ...EXTRA_KEYS].forEach((k) => { try { localStorage.removeItem(k); } catch {} });
+    loadExtras();
+    matches = []; tour = { teams: [] }; goals = []; weapons = clone(DEFAULT_WEAPONS);
     $("b_have").value = 0; $("b_rate").value = 80;
     fillWeaponSelects(); renderWeaponEditor(); route();
   },
