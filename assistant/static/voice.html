@@ -6,6 +6,9 @@
 <meta name="theme-color" content="#05060a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Voice Assistant</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <style>
   :root {
     --bg: #05060a;
@@ -117,6 +120,18 @@
   .msg { padding: 10px 14px; border-radius: 16px; max-width: 85%; line-height: 1.5; overflow-wrap: anywhere; unicode-bidi: plaintext; }
   .msg.user { align-self: flex-end; background: linear-gradient(90deg, var(--c1), var(--c2)); }
   .msg.bot { align-self: flex-start; background: var(--panel); border: 1px solid var(--border); }
+  a.action {
+    align-self: flex-start;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: #25d366;
+    color: #04140a;
+    font-weight: 600;
+    text-decoration: none;
+  }
   .msg.err { align-self: center; color: var(--danger); background: transparent; font-size: 14px; }
 
   form { width: 100%; max-width: 560px; display: flex; gap: 8px; }
@@ -190,6 +205,17 @@
     $("log").scrollTop = $("log").scrollHeight;
   }
 
+  function addAction(action) {
+    const a = document.createElement("a");
+    a.className = "action";
+    a.href = action.url;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = "👉 " + action.label + " — kholein aur Send dabayein";
+    $("log").appendChild(a);
+    $("log").scrollTop = $("log").scrollHeight;
+  }
+
   async function api(path, body) {
     const res = await fetch(path, {
       method: body === undefined ? "GET" : "POST",
@@ -241,8 +267,9 @@
     $("live").textContent = "";
     setState("thinking", "Soch raha hoon…");
     try {
-      const { reply } = await api("/api/ask", { text });
+      const { reply, actions = [] } = await api("/api/ask", { text });
       addMsg("bot", reply);
+      for (const a of actions) addAction(a);
       await speak(reply);
     } catch (e) {
       addMsg("err", e.message);
@@ -376,6 +403,9 @@
   if ("Notification" in window && Notification.permission === "default") {
     document.addEventListener("click", () => Notification.requestPermission(), { once: true });
   }
+
+  // ---------- Installable app ----------
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
 
   // ---------- Startup ----------
   if (!SR) {

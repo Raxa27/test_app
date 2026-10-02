@@ -2,6 +2,7 @@
 
 import threading
 import time
+import webbrowser
 
 import anthropic
 
@@ -41,6 +42,9 @@ def main() -> None:
             continue
         try:
             print(assistant.ask(text))
+            for action in assistant.last_actions:
+                print(f"👉 {action['label']}: {action['url']}")
+                webbrowser.open(action["url"])
         except anthropic.AuthenticationError:
             print("API key is missing or invalid. Set ANTHROPIC_API_KEY.")
         except anthropic.RateLimitError:

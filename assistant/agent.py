@@ -4,7 +4,7 @@ import os
 
 import anthropic
 
-from .tools import ALL_TOOLS
+from .tools import ALL_TOOLS, PENDING_ACTIONS
 
 MODEL = os.environ.get("ASSISTANT_MODEL", "claude-opus-5-5")
 EFFORT = os.environ.get("ASSISTANT_EFFORT", "medium")
@@ -15,6 +15,7 @@ SYSTEM_PROMPT = """You are the user's personal assistant. They give you everyday
 You can:
 - Save and find notes, manage a to-do list, track expenses (amounts are in the user's local currency unless they say otherwise), and set reminders.
 - Search the web and read web pages for news, prices, weather, facts, recipes, and how-tos. Mention sources for facts you looked up.
+- Send WhatsApp messages with send_whatsapp: it opens WhatsApp with the message filled in and the user taps Send. Use save_contact when the user gives a number for someone.
 - Write and read text files (letters, applications, plans, lists) in the assistant's files folder.
 - Draft messages, emails, posts, and documents, translate, explain, calculate, and plan.
 
@@ -30,12 +31,15 @@ class Assistant:
         self.client = anthropic.Anthropic()
         self.system = SYSTEM_PROMPT + (VOICE_PROMPT if voice else "")
         self.messages: list = []
+        self.last_actions: list[dict] = []
 
     def reset(self) -> None:
         self.messages = []
 
     def ask(self, user_text: str) -> str:
         """Send one user message, let the agent use tools as needed, and return its final reply text."""
+        PENDING_ACTIONS.clear()
+        self.last_actions = []
         start = len(self.messages)
         self.messages.append({"role": "user", "content": user_text})
         try:
@@ -44,6 +48,9 @@ class Assistant:
             # Drop the incomplete turn so the next request starts from a valid history.
             del self.messages[start:]
             raise
+        finally:
+            self.last_actions = list(PENDING_ACTIONS)
+            PENDING_ACTIONS.clear()
 
         if last is None:
             return "(no reply)"

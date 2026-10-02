@@ -3,6 +3,7 @@
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import quote
 
 from anthropic import beta_tool
 
@@ -238,6 +239,80 @@ def pop_due_reminders() -> list[dict]:
     return due
 
 
+# ---------- Contacts & WhatsApp ----------
+
+# Actions the user must finish on their device (e.g. tapping Send in WhatsApp).
+# Collected during one Assistant.ask() call and shown by the CLI, Telegram bot, or voice page.
+PENDING_ACTIONS: list[dict] = []
+
+
+def _normalize_phone(phone: str) -> str:
+    digits = "".join(ch for ch in phone if ch.isdigit())
+    if digits.startswith("00"):
+        digits = digits[2:]
+    elif digits.startswith("0") and len(digits) == 11:
+        digits = "92" + digits[1:]  # Pakistani local format 03xx-xxxxxxx
+    return digits
+
+
+def _find_contact(name: str) -> dict | None:
+    q = name.lower().strip()
+    contacts = storage.load("contacts")
+    return next((c for c in contacts if c["name"].lower() == q), None) or next(
+        (c for c in contacts if q in c["name"].lower()), None
+    )
+
+
+@beta_tool
+def save_contact(name: str, phone: str) -> str:
+    """Save or update a contact's phone number so messages can be sent to them by name.
+
+    Args:
+        name: Contact name, e.g. "Ammi" or "Ali bhai".
+        phone: Phone number in any format, e.g. "0300 1234567" or "+92 300 1234567".
+    """
+    number = _normalize_phone(phone)
+    if len(number) < 10:
+        return "That phone number looks incomplete."
+    contacts = [c for c in storage.load("contacts") if c["name"].lower() != name.lower().strip()]
+    contacts.append({"id": storage.next_id(contacts), "name": name.strip(), "phone": number})
+    storage.save("contacts", contacts)
+    return f"Saved {name}: +{number}."
+
+
+@beta_tool
+def list_contacts() -> str:
+    """List saved contacts."""
+    contacts = storage.load("contacts")
+    if not contacts:
+        return "No saved contacts."
+    return "\n".join(f"{c['name']}: +{c['phone']}" for c in sorted(contacts, key=lambda c: c["name"].lower()))
+
+
+@beta_tool
+def send_whatsapp(message: str, to: str = "") -> str:
+    """Prepare a WhatsApp message. The user gets a button that opens WhatsApp with the message filled in; they tap Send there.
+
+    Write the message exactly as it should be sent, in the language the user wants.
+
+    Args:
+        message: The full message text to send.
+        to: A saved contact name or a phone number. Leave empty to let the user pick the chat in WhatsApp.
+    """
+    number, label = "", "WhatsApp"
+    if to:
+        contact = _find_contact(to)
+        if contact:
+            number, label = contact["phone"], contact["name"]
+        elif sum(ch.isdigit() for ch in to) >= 10:
+            number, label = _normalize_phone(to), to
+        else:
+            return f'No saved contact named "{to}". Ask the user for the number (then save_contact), or call again with to="" so they can pick the chat in WhatsApp.'
+    url = f"https://wa.me/{number}?text={quote(message)}"
+    PENDING_ACTIONS.append({"type": "whatsapp", "label": f"WhatsApp: {label}", "url": url})
+    return f"WhatsApp message ready for {label}. The user will see a button to open WhatsApp and tap Send."
+
+
 # ---------- Files (sandboxed to data/files) ----------
 
 def _safe_path(name: str) -> Path:
@@ -301,6 +376,7 @@ LOCAL_TOOLS = [
     add_task, list_tasks, complete_task,
     add_expense, expense_summary, delete_expense,
     add_reminder, list_reminders, cancel_reminder,
+    save_contact, list_contacts, send_whatsapp,
     write_file, read_file, list_files,
 ]
 

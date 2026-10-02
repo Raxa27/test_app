@@ -23,7 +23,14 @@ from .agent import Assistant
 from .tools import pop_due_reminders
 
 log = logging.getLogger("voice_server")
-PAGE = (Path(__file__).resolve().parent / "static" / "voice.html").read_bytes()
+STATIC = Path(__file__).resolve().parent / "static"
+PAGE = (STATIC / "voice.html").read_bytes()
+STATIC_FILES = {
+    "/manifest.json": ("manifest.json", "application/manifest+json"),
+    "/sw.js": ("sw.js", "text/javascript"),
+    "/icon-192.png": ("icon-192.png", "image/png"),
+    "/icon-512.png": ("icon-512.png", "image/png"),
+}
 PASSWORD = os.environ.get("ASSISTANT_PASSWORD", "")
 MAX_BODY = 20_000
 
@@ -54,6 +61,9 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path in ("/", "/index.html"):
             self._send(200, PAGE, "text/html; charset=utf-8")
+        elif self.path in STATIC_FILES:
+            name, content_type = STATIC_FILES[self.path]
+            self._send(200, (STATIC / name).read_bytes(), content_type)
         elif self.path == "/api/config":
             self._json(200, {"password_required": bool(PASSWORD)})
         elif self.path == "/api/reminders":
@@ -87,6 +97,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             with assistant_lock:
                 reply = assistant.ask(text)
+                actions = assistant.last_actions
         except anthropic.AuthenticationError:
             return self._json(500, {"error": "API key is missing or invalid."})
         except anthropic.RateLimitError:
@@ -95,7 +106,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(502, {"error": "Could not reach the AI service."})
         except anthropic.APIStatusError as e:
             return self._json(502, {"error": f"AI service error {e.status_code}."})
-        self._json(200, {"reply": reply})
+        self._json(200, {"reply": reply, "actions": actions})
 
 
 def main() -> None:

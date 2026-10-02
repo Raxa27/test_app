@@ -11,6 +11,7 @@ Ek AI agent jo aapke kehne par rozana ke kaam karta hai. Urdu, Roman Urdu, Hindi
 | 💰 Kharcha | "aaj 500 ka khana khaya" · "is mahine kitna kharcha hua?" |
 | ⏰ Reminders | "2 ghante baad yaad dilana dawai leni hai" |
 | 🌐 Internet | "aaj Lahore ka mausam?" · "dollar ka rate kya hai?" · "is link ka khulasa karo" |
+| 💬 WhatsApp | "Ammi ka number 0300-1234567 save karo" · "Ammi ko WhatsApp karo ke main raste mein hoon" |
 | 📄 Files | "chhutti ki application likh kar save karo" · "meri files dikhao" |
 | ✍️ Likhna | emails, posts, translation, hisaab, planning, sawal jawab |
 
@@ -57,6 +58,16 @@ Phir **Chrome ya Edge** mein `http://localhost:8000` kholein.
 - Upar se zabaan chunein: اردو, हिन्दी ya English.
 - Reminder ka waqt aane par ye bol kar yaad dilata hai, jab tak page khula ho.
 - Jawab bolte waqt orb dabayein to wo chup ho jayega.
+
+### WhatsApp messages kaise jaate hain
+
+Agent message likh kar ek hara **"WhatsApp: Ammi"** button dikhata hai. Use dabane se WhatsApp khulta hai aur message pehle se likha hota hai. Aap sirf **Send** dabate hain. Is ka matlab hai ke koi message aapki marzi ke baghair nahi jaata, aur aapka WhatsApp account ban hone ka khatra bhi nahi.
+
+### App ki tarah install karein
+
+Chrome mein page kholne ke baad address bar mein **Install** ka icon aata hai. Phone par Chrome menu (⋮) mein **"Add to Home screen" / "Install app"** hota hai. Install karne ke baad ye apne icon ke saath alag app ki tarah khulta hai.
+
+Yaad rahe: app ka "dimagh" aapke computer par chalne wala server hai. Server band ho to app jawab nahi dega.
 
 ### Phone par voice assistant
 

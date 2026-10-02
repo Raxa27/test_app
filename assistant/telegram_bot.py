@@ -48,6 +48,8 @@ class TelegramBot:
         self.http.post(f"{self.api}/sendChatAction", json={"chat_id": chat_id, "action": "typing"})
         try:
             reply = self.assistant.ask(text)
+            for action in self.assistant.last_actions:
+                reply += f"\n\n👉 {action['label']} (tap to open, then Send):\n{action['url']}"
         except anthropic.RateLimitError:
             reply = "Rate limited. Please try again in a minute."
         except anthropic.APIConnectionError:
