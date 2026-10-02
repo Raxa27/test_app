@@ -1,1 +1,1 @@
-"""Personal AI assistant agent."""
+"""Zuzu: a personal AI assistant agent."""

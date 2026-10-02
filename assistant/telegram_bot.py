@@ -39,7 +39,7 @@ class TelegramBot:
         if str(chat_id) != self.allowed_chat_id:
             return
         if text == "/start":
-            self.send(chat_id, "Assalam o Alaikum! Bataiye kya kaam karna hai. /reset se nai baat shuru karein.")
+            self.send(chat_id, "Assalam o Alaikum! Main Zuzu hoon. Bataiye kya kaam karna hai. /reset se nai baat shuru karein.")
             return
         if text == "/reset":
             self.assistant.reset()

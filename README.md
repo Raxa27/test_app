@@ -1,6 +1,6 @@
-# Personal Assistant Agent
+# Zuzu: Personal Voice Assistant
 
-Ek AI agent jo aapke kehne par rozana ke kaam karta hai. Urdu, Roman Urdu, Hindi ya English mein baat karein.
+**Zuzu** ek AI agent hai jo aapke kehne par rozana ke kaam karta hai. Urdu, Roman Urdu, Hindi ya English mein baat karein.
 
 ## Ye kya kar sakta hai
 
@@ -59,7 +59,7 @@ python -m assistant.voice_server
 Phir **Chrome ya Edge** mein `http://localhost:8000` kholein.
 
 - **Orb dabayein aur bolein:** "kal subah 9 baje meeting ka reminder laga do". Agent kaam kar ke bol kar jawab dega.
-- **Hey mode:** ise on karein to orb dabane ki zaroorat nahi. Bas **"suno"** bolein aur phir apna kaam batayein, jaise "suno, aaj ka mausam kaisa hai?". Ye "hey assistant" aur "hey dost" bhi samajhta hai.
+- **Hey mode:** ise on karein to orb dabane ki zaroorat nahi. Bas **"Zuzu"** bolein aur phir apna kaam batayein, jaise "Zuzu, aaj ka mausam kaisa hai?". Ye "suno Zuzu" aur "hey Zuzu" bhi samajhta hai.
 - Upar se zabaan chunein: اردو, हिन्दी ya English.
 - Reminder ka waqt aane par ye bol kar yaad dilata hai, jab tak page khula ho.
 - Jawab bolte waqt orb dabayein to wo chup ho jayega.

@@ -1,9 +1,9 @@
 {
   "id": "/",
   "scope": "/",
-  "name": "Voice Assistant",
-  "short_name": "Assistant",
-  "description": "Bol kar notes, kharcha, reminders, WhatsApp messages aur internet search.",
+  "name": "Zuzu",
+  "short_name": "Zuzu",
+  "description": "Zuzu: aap ka voice assistant. Bol kar gaane, calls, WhatsApp, reminders, kharcha aur internet search.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#05060a",

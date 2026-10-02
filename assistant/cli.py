@@ -22,7 +22,7 @@ def _reminder_loop() -> None:
 def main() -> None:
     assistant = Assistant()
     threading.Thread(target=_reminder_loop, daemon=True).start()
-    print("Personal Assistant ready. " + HELP)
+    print("Zuzu ready. " + HELP)
     while True:
         try:
             text = input("> ").strip()
