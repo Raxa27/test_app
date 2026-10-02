@@ -72,6 +72,24 @@ Ye bilkul app ki tarah icon se khulegi.
 
 ---
 
+## Bilkul free: Render + Gemini (koi paisa nahi)
+
+Railway ka Hobby plan paid hai. Agar koi bhi paisa nahi lagana to **Render.com** ka free plan aur **Gemini** ki free key istemal karein.
+
+1. Pehle Gemini ki free key le lein (neeche "Free tareeqa: Gemini" ka step 1-2).
+2. Phone par **render.com** kholein → **Get Started** → **GitHub se sign up** karein.
+3. **New +** → **Blueprint** → `Raxa27/test_app` repo chunein. Agar repo list mein na ho to **Configure GitHub** se Render ko is repo ki access dein.
+4. Render khud `render.yaml` file parh lega aur do cheezein poochega:
+   - `GEMINI_API_KEY` = aapki `AIza...` key
+   - `ASSISTANT_PASSWORD` = apna password
+5. **Apply / Deploy** dabayein. 3-5 minute mein build ho jayega.
+6. Upar `https://zuzu-xxxx.onrender.com` jaisa link nazar aayega. Use Chrome mein kholein → password → menu (⋮) → **Install app**.
+
+Free plan ki kamiyan:
+- **So jata hai:** 15 minute koi istemal na kare to server so jata hai. Agla pehla sawal 30-60 second late jawab deta hai, phir tez chalta hai.
+- **Data save nahi rehta:** free plan mein disk nahi hoti. Server restart ya nayi deploy par notes, kharcha, contacts aur reminders mit jate hain. Zaroori cheezein kahin aur bhi likh kar rakhein.
+- **Reminders:** server so raha ho to reminder time par nahi bajta.
+
 ## Free tareeqa: Gemini
 
 Claude API ke liye credits khareedne padte hain. Agar paise nahi lagane to Zuzu **Google Gemini** par bhi chalta hai, jis ka free plan hai aur card nahi chahiye.
