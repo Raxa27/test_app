@@ -1,6 +1,6 @@
 # FF Toolkit
 
-Nine tools for Free Fire players in one app. It runs in the browser as a web app (PWA) and on Android as an APK, with optional login and cloud sync.
+Fourteen tools for Free Fire players in one app. It runs in the browser as a web app (PWA) and on Android as an APK. Tools unlock for members the admin has given a login; everyone else sees a locked demo.
 
 ## Tools
 
