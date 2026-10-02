@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="ur">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<title>Ride Helper</title>
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --card: #ffffff;
+    --text: #1c1917;
+    --muted: #57534e;
+    --line: #e7e5e4;
+    --brand: #0f766e;
+    --brand-ink: #ffffff;
+    --yango: #ffcc00;
+    --yango-ink: #1c1917;
+    --indrive: #a3e635;
+    --indrive-ink: #1c1917;
+    --help: #dc2626;
+    --help-ink: #ffffff;
+    --soft: #ecfdf5;
+    --warn: #fef3c7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1917; --card: #292524; --text: #fafaf9; --muted: #d6d3d1;
+      --line: #44403c; --brand: #14b8a6; --brand-ink: #042f2e;
+      --soft: #134e4a; --warn: #422006;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1917; --card: #292524; --text: #fafaf9; --muted: #d6d3d1;
+    --line: #44403c; --brand: #14b8a6; --brand-ink: #042f2e;
+    --soft: #134e4a; --warn: #422006;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Nastaliq Urdu", "Noto Sans Arabic", sans-serif;
+    font-size: 22px; line-height: 1.5;
+  }
+  [dir="rtl"] body, body[dir="rtl"] { line-height: 1.9; }
+  main { max-width: 560px; margin: 0 auto; padding: 16px 16px 120px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+  h1 { font-size: 30px; margin: 8px 0; }
+  h2 { font-size: 26px; margin: 16px 0 8px; }
+  p { margin: 8px 0; }
+  .muted { color: var(--muted); font-size: 19px; }
+  button, .btn {
+    font: inherit; border: 0; cursor: pointer; text-decoration: none;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    width: 100%; min-height: 72px; padding: 14px 18px; border-radius: 18px;
+    font-weight: 700; font-size: 24px; text-align: center;
+  }
+  button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible { outline: 4px solid var(--brand); outline-offset: 3px; }
+  .primary { background: var(--brand); color: var(--brand-ink); }
+  .yango { background: var(--yango); color: var(--yango-ink); }
+  .indrive { background: var(--indrive); color: var(--indrive-ink); }
+  .help { background: var(--help); color: var(--help-ink); }
+  .ghost { background: var(--card); color: var(--text); border: 2px solid var(--line); }
+  .small { min-height: 52px; font-size: 19px; width: auto; padding: 8px 16px; }
+  .stack > * + * { margin-top: 14px; }
+  .places { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+  .place {
+    background: var(--card); color: var(--text); border: 2px solid var(--line);
+    flex-direction: column; min-height: 150px; font-size: 23px;
+  }
+  .place .ico { font-size: 54px; line-height: 1; }
+  .card { background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 16px; }
+  .dest { background: var(--soft); border-radius: 18px; padding: 16px; }
+  .dest .addr { font-size: 26px; font-weight: 700; word-break: break-word; }
+  .fare { background: var(--warn); border-radius: 18px; padding: 16px; font-size: 22px; }
+  .fare b { font-size: 30px; }
+  ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: s; }
+  ol.steps li {
+    counter-increment: s; position: relative; background: var(--card);
+    border: 2px solid var(--line); border-radius: 18px; padding: 16px 16px 16px 76px; margin-top: 12px;
+  }
+  [dir="rtl"] ol.steps li { padding: 16px 76px 16px 16px; }
+  ol.steps li::before {
+    content: counter(s); position: absolute; top: 14px; left: 14px;
+    width: 48px; height: 48px; border-radius: 50%; background: var(--brand); color: var(--brand-ink);
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 26px;
+  }
+  [dir="rtl"] ol.steps li::before { left: auto; right: 14px; }
+  ol.steps li.done { opacity: .45; }
+  ol.steps li.done::before { content: "✓"; }
+  .row { display: flex; gap: 12px; }
+  .row > * { flex: 1; }
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; background: var(--bg);
+    border-top: 2px solid var(--line); padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  }
+  .bar .inner { max-width: 560px; margin: 0 auto; display: flex; gap: 12px; }
+  .bar .inner > * { flex: 1; min-height: 64px; font-size: 21px; }
+  label { display: block; font-weight: 700; font-size: 19px; margin-top: 12px; }
+  input, select {
+    font: inherit; font-size: 20px; width: 100%; padding: 12px; margin-top: 6px;
+    border-radius: 12px; border: 2px solid var(--line); background: var(--card); color: var(--text);
+  }
+  .pl-edit { margin-top: 14px; }
+  .pl-edit .row { margin-top: 10px; }
+  .toast {
+    position: fixed; left: 50%; bottom: 110px; transform: translateX(-50%);
+    background: var(--text); color: var(--bg); padding: 12px 20px; border-radius: 14px;
+    font-size: 20px; display: none; z-index: 10; max-width: calc(100% - 32px); text-align: center;
+  }
+  .hidden { display: none !important; }
+  .linkish { background: none; color: var(--muted); text-decoration: underline; min-height: 56px; font-weight: 400; font-size: 19px; }
+  .check { display: flex; gap: 14px; align-items: flex-start; }
+  .check input { width: 34px; height: 34px; margin: 4px 0 0; flex: none; }
+  .check label { margin: 0; font-weight: 400; font-size: 22px; }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ------------------------------------------------------------------
+   Ride Helper — bade buttons aur aasan steps, taake ammi/abbu
+   Yango ya inDrive par khud ride book kar sakein.
+   Saara data sirf isi phone (localStorage) mein rehta hai.
+------------------------------------------------------------------- */
+
+const APPS = {
+  yango: {
+    name: "Yango",
+    pkg: "com.yandex.yango",
+    scheme: "yango",
+    store: "https://play.google.com/store/apps/details?id=com.yandex.yango",
+  },
+  indrive: {
+    name: "inDrive",
+    pkg: "sinet.startup.inDriver",
+    scheme: "indriver",
+    store: "https://play.google.com/store/apps/details?id=sinet.startup.inDriver",
+  },
+};
+
+const ICONS = ["🏠", "🏥", "🕌", "🛒", "👨‍👩‍👧", "🏦", "💊", "🏫", "🌳", "📍"];
+
+/* ---------------- Language strings ---------------- */
+const T = {
+  ur: {
+    dir: "rtl",
+    title: "سواری مددگار",
+    hello: (n) => n ? `${n} کی طرف سے آپ کے لیے` : "آپ کی سواری کا مددگار",
+    where: "کہاں جانا ہے؟",
+    other: "کوئی اور جگہ",
+    otherPrompt: "جگہ کا نام یا پتہ لکھیں",
+    go: "آگے چلیں",
+    noPlaces: "ابھی کوئی جگہ محفوظ نہیں۔ اپنے بیٹے / بیٹی سے سیٹ اپ کروائیں۔",
+    setup: "⚙️ سیٹ اپ (بچوں کے لیے)",
+    whichApp: "کون سی ایپ استعمال کرنی ہے؟",
+    recommended: "تجویز کردہ",
+    back: "→ واپس",
+    home: "🏠 شروع",
+    goingTo: "آپ یہاں جا رہے ہیں:",
+    copy: "📋 پتہ کاپی کریں",
+    copied: "پتہ کاپی ہو گیا۔ ایپ میں انگلی دبا کر رکھیں اور Paste دبائیں۔",
+    fareTitle: "کرایہ تقریباً",
+    fareNote: "یہی رقم inDrive میں لکھیں۔ ڈرائیور تھوڑا زیادہ مانگے تو ٹھیک ہے۔",
+    openApp: (a) => `📱 ${a} کھولیں`,
+    steps: "قدم بہ قدم",
+    tapDone: "ہر قدم مکمل ہونے پر اس پر انگلی لگائیں ✓",
+    listen: "🔊 سنیں",
+    stop: "⏹ بند کریں",
+    helpBtn: "🆘 مدد چاہیے",
+    callBtn: "📞 فون کریں",
+    carCame: "🚗 گاڑی آ گئی؟",
+    safetyTitle: "بیٹھنے سے پہلے دیکھ لیں",
+    safety: [
+      "گاڑی کا نمبر ایپ والے نمبر سے ملائیں",
+      "گاڑی کا رنگ اور ماڈل ملائیں",
+      "ڈرائیور سے پوچھیں: میرا نام کیا ہے؟",
+      "پچھلی سیٹ پر بیٹھیں",
+    ],
+    sendTrip: "📤 بچوں کو بتائیں کہ گاڑی میں بیٹھ گئے",
+    tripMsg: (d) => `میں گاڑی میں بیٹھ گیا/گئی ہوں۔ جا رہا/رہی ہوں: ${d}`,
+    helpMsg: (d, loc) => `مجھے سواری بک کرنے میں مدد چاہیے۔ جانا ہے: ${d}${loc ? `\nمیں یہاں ہوں: ${loc}` : ""}`,
+    noHelper: "پہلے سیٹ اپ میں بچوں کا نمبر ڈالیں",
+    gettingLoc: "آپ کی جگہ معلوم کی جا رہی ہے…",
+    map: "🗺️ نقشے پر دیکھیں",
+    yangoSteps: (d) => [
+      "نیچے پیلا بٹن دبا کر Yango ایپ کھولیں۔",
+      "اوپر آپ کی موجودہ جگہ خود آ جاتی ہے۔ ٹھیک ہے تو آگے چلیں۔",
+      `”Where to?“ یا ”کہاں جانا ہے“ پر انگلی لگائیں۔ پتہ لکھیں یا Paste کریں: ${d}`,
+      "نیچے جو پہلی جگہ آئے، اس پر انگلی لگائیں۔",
+      "گاڑی کی قسم چنیں۔ Economy سب سے سستی ہے۔ پیسے: Cash۔",
+      "نیچے بڑا پیلا بٹن ”Order“ دبائیں۔",
+      "انتظار کریں۔ ڈرائیور کا نام، گاڑی کا نمبر اور رنگ اسکرین پر آ جائے گا۔",
+      "گاڑی آئے تو نمبر ملائیں، پھر بیٹھیں۔",
+    ],
+    indriveSteps: (d, f) => [
+      "نیچے سبز بٹن دبا کر inDrive ایپ کھولیں۔ ”City“ یا ”Ride“ چنیں۔",
+      "”From“ میں آپ کی موجودہ جگہ خود آ جاتی ہے۔ دیکھ لیں۔",
+      `”To“ پر انگلی لگائیں۔ پتہ لکھیں یا Paste کریں: ${d}`,
+      "نیچے جو پہلی جگہ آئے، اس پر انگلی لگائیں۔",
+      f ? `”Offer your fare“ میں کرایہ لکھیں: ${f} روپے` : "”Offer your fare“ میں کرایہ لکھیں (ایپ جو رقم بتائے وہی ٹھیک ہے)۔",
+      "بڑا سبز بٹن ”Find a driver“ دبائیں۔",
+      "ڈرائیوروں کی پیشکش آئیں گی۔ کم پیسے اور زیادہ ستارے ⭐ والا چنیں، ”Accept“ دبائیں۔",
+      "گاڑی آئے تو نمبر ملائیں، پھر بیٹھیں۔ پیسے Cash میں دیں۔",
+    ],
+    // setup
+    setupTitle: "سیٹ اپ",
+    setupIntro: "یہ حصہ بچوں کے لیے ہے۔ اپنا نمبر اور امی/ابو کی عام جگہیں ڈالیں۔",
+    yourName: "آپ کا نام (جیسے: علی)",
+    yourPhone: "آپ کا واٹس ایپ نمبر (جیسے: 923001234567)",
+    places: "جگہیں",
+    pName: "جگہ کا نام (جیسے: گھر، ڈاکٹر)",
+    pAddr: "پورا پتہ (جو ایپ میں لکھنا ہے)",
+    pFare: "inDrive کرایہ (روپے، اختیاری)",
+    pApp: "کون سی ایپ؟",
+    pIcon: "نشان",
+    remove: "🗑 ہٹائیں",
+    addPlace: "➕ نئی جگہ",
+    save: "✅ محفوظ کریں",
+    saved: "محفوظ ہو گیا",
+    share: "📤 یہ سیٹ اپ امی/ابو کو بھیجیں",
+    shareNote: "یہ لنک واٹس ایپ پر بھیجیں۔ امی/ابو اسے کھولیں گے تو ساری جگہیں ان کے فون میں آ جائیں گی۔",
+    imported: "سیٹ اپ آ گیا! ✅",
+    lang: "Roman Urdu",
+    theme: "🌗",
+  },
+  ro: {
+    dir: "ltr",
+    title: "Sawari Madadgar",
+    hello: (n) => n ? `${n} ki taraf se aap ke liye` : "Aap ki ride ka madadgar",
+    where: "Kahan jana hai?",
+    other: "Koi aur jagah",
+    otherPrompt: "Jagah ka naam ya pata likhein",
+    go: "Aage chalein",
+    noPlaces: "Abhi koi jagah save nahi. Apne bete / beti se setup karwayein.",
+    setup: "⚙️ Setup (bachon ke liye)",
+    whichApp: "Kaun si app istemal karni hai?",
+    recommended: "Behtar",
+    back: "← Wapas",
+    home: "🏠 Shuru",
+    goingTo: "Aap yahan ja rahe hain:",
+    copy: "📋 Pata copy karein",
+    copied: "Pata copy ho gaya. App mein ungli daba kar rakhein aur Paste dabayein.",
+    fareTitle: "Kiraya takreeban",
+    fareNote: "Yehi raqam inDrive mein likhein. Driver thora zyada maange to theek hai.",
+    openApp: (a) => `📱 ${a} kholein`,
+    steps: "Qadam ba qadam",
+    tapDone: "Har qadam mukammal hone par us par ungli lagayein ✓",
+    listen: "🔊 Sunein",
+    stop: "⏹ Band karein",
+    helpBtn: "🆘 Madad chahiye",
+    callBtn: "📞 Phone karein",
+    carCame: "🚗 Gaari aa gayi?",
+    safetyTitle: "Baithne se pehle dekh lein",
+    safety: [
+      "Gaari ka number app wale number se milayein",
+      "Gaari ka rang aur model milayein",
+      "Driver se poochein: mera naam kya hai?",
+      "Pichli seat par baithein",
+    ],
+    sendTrip: "📤 Bachon ko batayein ke gaari mein baith gaye",
+    tripMsg: (d) => `Main gaari mein baith gaya/gayi hoon. Ja raha/rahi hoon: ${d}`,
+    helpMsg: (d, loc) => `Mujhe ride book karne mein madad chahiye. Jana hai: ${d}${loc ? `\nMain yahan hoon: ${loc}` : ""}`,
+    noHelper: "Pehle setup mein bachon ka number dalein",
+    gettingLoc: "Aap ki jagah maloom ki ja rahi hai…",
+    map: "🗺️ Naqshe par dekhein",
+    yangoSteps: (d) => [
+      "Neeche peela button daba kar Yango app kholein.",
+      "Upar aap ki maujooda jagah khud aa jati hai. Theek hai to aage chalein.",
+      `"Where to?" par ungli lagayein. Pata likhein ya Paste karein: ${d}`,
+      "Neeche jo pehli jagah aaye, us par ungli lagayein.",
+      "Gaari ki qisam chunein. Economy sab se sasti hai. Paise: Cash.",
+      "Neeche bara peela button \"Order\" dabayein.",
+      "Intezar karein. Driver ka naam, gaari ka number aur rang screen par aa jayega.",
+      "Gaari aaye to number milayein, phir baithein.",
+    ],
+    indriveSteps: (d, f) => [
+      "Neeche hara button daba kar inDrive app kholein. \"City\" ya \"Ride\" chunein.",
+      "\"From\" mein aap ki maujooda jagah khud aa jati hai. Dekh lein.",
+      `"To" par ungli lagayein. Pata likhein ya Paste karein: ${d}`,
+      "Neeche jo pehli jagah aaye, us par ungli lagayein.",
+      f ? `"Offer your fare" mein kiraya likhein: Rs ${f}` : "\"Offer your fare\" mein kiraya likhein (app jo raqam bataye wohi theek hai).",
+      "Bara hara button \"Find a driver\" dabayein.",
+      "Drivers ki offers aayengi. Kam paise aur zyada stars ⭐ wala chunein, \"Accept\" dabayein.",
+      "Gaari aaye to number milayein, phir baithein. Paise Cash mein dein.",
+    ],
+    setupTitle: "Setup",
+    setupIntro: "Ye hissa bachon ke liye hai. Apna number aur ammi/abbu ki aam jagahein dalein.",
+    yourName: "Aap ka naam (jaise: Ali)",
+    yourPhone: "Aap ka WhatsApp number (jaise: 923001234567)",
+    places: "Jagahein",
+    pName: "Jagah ka naam (jaise: Ghar, Doctor)",
+    pAddr: "Poora pata (jo app mein likhna hai)",
+    pFare: "inDrive kiraya (Rs, optional)",
+    pApp: "Kaun si app?",
+    pIcon: "Nishan",
+    remove: "🗑 Hatayein",
+    addPlace: "➕ Nayi jagah",
+    save: "✅ Save karein",
+    saved: "Save ho gaya",
+    share: "📤 Ye setup ammi/abbu ko bhejein",
+    shareNote: "Ye link WhatsApp par bhejein. Ammi/abbu isay kholenge to saari jagahein unke phone mein aa jayengi.",
+    imported: "Setup aa gaya! ✅",
+    lang: "اردو",
+    theme: "🌗",
+  },
+};
+
+/* ---------------- Storage (safe) ---------------- */
+const KEY = "ride-helper-v1";
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
+};
+let data = store.get(KEY, { helper: { name: "", phone: "" }, places: [] });
+let lang = store.get(KEY + "-lang", "ur");
+let t = T[lang];
+
+function save() { store.set(KEY, data); }
+
+/* Import setup sent by the child via link: #setup=<base64url json> */
+function b64encode(obj) {
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  let s = ""; bytes.forEach((b) => (s += String.fromCharCode(b)));
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function b64decode(str) {
+  const s = atob(str.replace(/-/g, "+").replace(/_/g, "/"));
+  return JSON.parse(new TextDecoder().decode(Uint8Array.from(s, (c) => c.charCodeAt(0))));
+}
+(function importFromHash() {
+  const m = location.hash.match(/setup=([A-Za-z0-9_-]+)/);
+  if (!m) return;
+  try {
+    const d = b64decode(m[1]);
+    if (d && Array.isArray(d.places)) {
+      data = { helper: d.helper || { name: "", phone: "" }, places: d.places };
+      save();
+      setTimeout(() => toast(t.imported), 300);
+    }
+  } catch {}
+  history.replaceState(null, "", location.pathname + location.search);
+})();
+
+/* ---------------- Helpers ---------------- */
+const $app = document.getElementById("app");
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const isAndroid = /android/i.test(navigator.userAgent);
+const cleanPhone = (p) => String(p || "").replace(/[^\d]/g, "");
+
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg; el.style.display = "block";
+  clearTimeout(toast._t); toast._t = setTimeout(() => (el.style.display = "none"), 3500);
+}
+
+function applyLang() {
+  t = T[lang];
+  document.documentElement.lang = lang === "ur" ? "ur" : "en";
+  document.documentElement.dir = t.dir;
+  document.title = t.title;
+}
+
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch {
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand("copy"); } catch {}
+    ta.remove(); return ok;
+  }
+}
+
+/* Open the ride app. On Android an intent:// URL opens the app if
+   installed, otherwise falls back to its Play Store page. */
+function openApp(key) {
+  const a = APPS[key];
+  if (isAndroid) {
+    location.href =
+      `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;` +
+      `package=${a.pkg};S.browser_fallback_url=${encodeURIComponent(a.store)};end`;
+  } else {
+    location.href = `${a.scheme}://`;
+  }
+}
+
+function getLocation() {
+  return new Promise((res) => {
+    if (!navigator.geolocation) return res(null);
+    navigator.geolocation.getCurrentPosition(
+      (p) => res(`https://maps.google.com/?q=${p.coords.latitude.toFixed(6)},${p.coords.longitude.toFixed(6)}`),
+      () => res(null),
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  });
+}
+
+function whatsapp(text) {
+  const phone = cleanPhone(data.helper.phone);
+  if (!phone) return toast(t.noHelper);
+  location.href = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+}
+
+async function askHelp(dest) {
+  if (!cleanPhone(data.helper.phone)) return toast(t.noHelper);
+  toast(t.gettingLoc);
+  const loc = await getLocation();
+  whatsapp(t.helpMsg(dest || "-", loc));
+}
+
+function callHelper() {
+  const phone = cleanPhone(data.helper.phone);
+  if (!phone) return toast(t.noHelper);
+  location.href = `tel:+${phone}`;
+}
+
+/* Read-aloud using the phone's own voice, if available */
+function speak(lines) {
+  if (!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const voices = speechSynthesis.getVoices();
+  const want = lang === "ur" ? ["ur", "hi"] : ["hi", "en"];
+  let voice = null;
+  for (const w of want) { voice = voices.find((v) => v.lang.toLowerCase().startsWith(w)); if (voice) break; }
+  lines.forEach((line, i) => {
+    const u = new SpeechSynthesisUtterance(`${i + 1}. ${line}`);
+    if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = lang === "ur" ? "ur-PK" : "en-IN";
+    u.rate = 0.85;
+    speechSynthesis.speak(u);
+  });
+}
+
+/* ---------------- Screens ---------------- */
+let state = { screen: "home", place: null, app: null };
+function go(next) {
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  state = { ...state, ...next };
+  render();
+  window.scrollTo(0, 0);
+}
+
+function topBar(showBack) {
+  return `
+    <header>
+      ${showBack ? `<button class="ghost small" data-act="back">${t.back}</button>` : `<span></span>`}
+      <div class="row" style="flex:none">
+        <button class="ghost small" data-act="lang">${t.lang}</button>
+      </div>
+    </header>`;
+}
+
+function helpBar(dest) {
+  return `
+    <div class="bar"><div class="inner">
+      <button class="help" data-act="help" data-dest="${esc(dest)}">${t.helpBtn}</button>
+      <button class="ghost" data-act="call">${t.callBtn}</button>
+    </div></div>`;
+}
+
+function homeScreen() {
+  const places = data.places.filter((p) => p.addr || p.name);
+  return `
+    ${topBar(false)}
+    <p class="muted">${esc(t.hello(data.helper.name))}</p>
+    <h1>${t.where}</h1>
+    ${places.length ? "" : `<div class="card"><p>${t.noPlaces}</p></div>`}
+    <div class="places">
+      ${places.map((p, i) => `
+        <button class="place" data-act="pick" data-i="${data.places.indexOf(p)}">
+          <span class="ico">${esc(p.icon || "📍")}</span><span>${esc(p.name || p.addr)}</span>
+        </button>`).join("")}
+      <button class="place" data-act="other"><span class="ico">✏️</span><span>${t.other}</span></button>
+    </div>
+    <div style="margin-top:28px"><button class="linkish" data-act="setup">${t.setup}</button></div>
+    ${helpBar("")}`;
+}
+
+function otherScreen() {
+  return `
+    ${topBar(true)}
+    <h1>${t.other}</h1>
+    <label for="otherAddr">${t.otherPrompt}</label>
+    <input id="otherAddr" autocomplete="off" value="${esc(state.place?.addr || "")}">
+    <div style="margin-top:18px"><button class="primary" data-act="otherGo">${t.go}</button></div>
+    ${helpBar("")}`;
+}
+
+function appScreen() {
+  const p = state.place;
+  const rec = p.app || "yango";
+  const btn = (k) => `
+    <button class="${k}" data-act="app" data-app="${k}">
+      ${APPS[k].name}${rec === k ? ` <small style="font-weight:400">(${t.recommended})</small>` : ""}
+    </button>`;
+  const order = rec === "indrive" ? ["indrive", "yango"] : ["yango", "indrive"];
+  return `
+    ${topBar(true)}
+    <div class="dest"><div class="muted">${t.goingTo}</div><div class="addr">${esc(p.icon || "📍")} ${esc(p.name || p.addr)}</div></div>
+    <h2>${t.whichApp}</h2>
+    <div class="stack">${order.map(btn).join("")}</div>
+    ${helpBar(p.addr || p.name)}`;
+}
+
+function guideScreen() {
+  const p = state.place, k = state.app;
+  const dest = p.addr || p.name;
+  const steps = k === "indrive" ? t.indriveSteps(dest, p.fare) : t.yangoSteps(dest);
+  const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest)}`;
+  return `
+    ${topBar(true)}
+    <div class="stack">
+      <div class="dest">
+        <div class="muted">${t.goingTo}</div>
+        <div class="addr">${esc(dest)}</div>
+        <div class="row" style="margin-top:12px">
+          <button class="primary small" data-act="copy" data-text="${esc(dest)}">${t.copy}</button>
+          <a class="btn ghost small" href="${mapUrl}" target="_blank" rel="noopener">${t.map}</a>
+        </div>
+      </div>
+      ${k === "indrive" && p.fare ? `<div class="fare">${t.fareTitle}: <b>Rs ${esc(p.fare)}</b><div class="muted">${t.fareNote}</div></div>` : ""}
+      <button class="${k}" data-act="open" data-app="${k}">${t.openApp(APPS[k].name)}</button>
+    </div>
+    <div class="row" style="align-items:center;margin-top:18px">
+      <h2 style="margin:0">${t.steps}</h2>
+      <button class="ghost small" style="flex:none" data-act="listen">${t.listen}</button>
+    </div>
+    <p class="muted">${t.tapDone}</p>
+    <ol class="steps">${steps.map((s) => `<li data-act="tick">${esc(s)}</li>`).join("")}</ol>
+    <div style="margin-top:18px"><button class="primary" data-act="safety">${t.carCame}</button></div>
+    ${helpBar(dest)}`;
+}
+
+function safetyScreen() {
+  const dest = state.place.addr || state.place.name;
+  return `
+    ${topBar(true)}
+    <h1>${t.safetyTitle}</h1>
+    <div class="card stack">
+      ${t.safety.map((s, i) => `
+        <div class="check"><input type="checkbox" id="c${i}"><label for="c${i}">${esc(s)}</label></div>`).join("")}
+    </div>
+    <div class="stack" style="margin-top:18px">
+      <button class="primary" data-act="trip" data-dest="${esc(dest)}">${t.sendTrip}</button>
+      <button class="ghost" data-act="home">${t.home}</button>
+    </div>
+    ${helpBar(dest)}`;
+}
+
+function setupScreen() {
+  const pl = data.places.length ? data.places : [{ icon: "🏠", name: "", addr: "", fare: "", app: "yango" }];
+  return `
+    ${topBar(true)}
+    <h1>${t.setupTitle}</h1>
+    <p class="muted">${t.setupIntro}</p>
+    <div class="card">
+      <label for="hName">${t.yourName}</label><input id="hName" value="${esc(data.helper.name)}">
+      <label for="hPhone">${t.yourPhone}</label><input id="hPhone" inputmode="tel" value="${esc(data.helper.phone)}">
+    </div>
+    <h2>${t.places}</h2>
+    <div id="plist">${pl.map(placeEditor).join("")}</div>
+    <div class="stack" style="margin-top:14px">
+      <button class="ghost" data-act="addPlace">${t.addPlace}</button>
+      <button class="primary" data-act="save">${t.save}</button>
+      <button class="ghost" data-act="share">${t.share}</button>
+      <p class="muted">${t.shareNote}</p>
+    </div>`;
+}
+
+function placeEditor(p) {
+  return `
+    <div class="card pl-edit">
+      <div class="row">
+        <div style="flex:0 0 96px"><label>${t.pIcon}</label>
+          <select data-f="icon">${ICONS.map((i) => `<option ${p.icon === i ? "selected" : ""}>${i}</option>`).join("")}</select>
+        </div>
+        <div><label>${t.pName}</label><input data-f="name" value="${esc(p.name)}"></div>
+      </div>
+      <label>${t.pAddr}</label><input data-f="addr" value="${esc(p.addr)}">
+      <div class="row">
+        <div><label>${t.pApp}</label>
+          <select data-f="app">
+            <option value="yango" ${p.app !== "indrive" ? "selected" : ""}>Yango</option>
+            <option value="indrive" ${p.app === "indrive" ? "selected" : ""}>inDrive</option>
+          </select>
+        </div>
+        <div><label>${t.pFare}</label><input data-f="fare" inputmode="numeric" value="${esc(p.fare)}"></div>
+      </div>
+      <div style="margin-top:12px"><button class="ghost small" data-act="removePlace">${t.remove}</button></div>
+    </div>`;
+}
+
+function readSetupForm() {
+  const places = [...document.querySelectorAll("#plist .pl-edit")].map((el) => {
+    const v = (f) => el.querySelector(`[data-f="${f}"]`).value.trim();
+    return { icon: v("icon"), name: v("name"), addr: v("addr"), app: v("app"), fare: v("fare").replace(/[^\d]/g, "") };
+  }).filter((p) => p.name || p.addr);
+  return {
+    helper: { name: document.getElementById("hName").value.trim(), phone: cleanPhone(document.getElementById("hPhone").value) },
+    places,
+  };
+}
+
+function render() {
+  applyLang();
+  const screens = { home: homeScreen, other: otherScreen, app: appScreen, guide: guideScreen, safety: safetyScreen, setup: setupScreen };
+  $app.innerHTML = screens[state.screen]();
+}
+
+const BACK = { other: "home", app: "home", guide: "app", safety: "guide", setup: "home" };
+
+/* ---------------- Events ---------------- */
+document.addEventListener("click", async (e) => {
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  const act = el.dataset.act;
+  switch (act) {
+    case "back": go({ screen: BACK[state.screen] || "home" }); break;
+    case "home": go({ screen: "home", place: null, app: null }); break;
+    case "lang":
+      if (state.screen === "setup") data = { ...data, ...readSetupForm() };
+      lang = lang === "ur" ? "ro" : "ur"; store.set(KEY + "-lang", lang); render(); break;
+    case "pick": go({ screen: "app", place: data.places[+el.dataset.i] }); break;
+    case "other": go({ screen: "other", place: null }); break;
+    case "otherGo": {
+      const addr = document.getElementById("otherAddr").value.trim();
+      if (!addr) return document.getElementById("otherAddr").focus();
+      go({ screen: "app", place: { icon: "📍", name: addr, addr, app: "yango", fare: "" } });
+      break;
+    }
+    case "app": go({ screen: "guide", app: el.dataset.app }); break;
+    case "copy": if (await copyText(el.dataset.text)) toast(t.copied); break;
+    case "open":
+      await copyText(state.place.addr || state.place.name);
+      toast(t.copied);
+      setTimeout(() => openApp(el.dataset.app), 900);
+      break;
+    case "listen": {
+      if ("speechSynthesis" in window && speechSynthesis.speaking) { speechSynthesis.cancel(); el.textContent = t.listen; break; }
+      const p = state.place, dest = p.addr || p.name;
+      speak(state.app === "indrive" ? t.indriveSteps(dest, p.fare) : t.yangoSteps(dest));
+      el.textContent = t.stop;
+      break;
+    }
+    case "tick": el.classList.toggle("done"); break;
+    case "safety": go({ screen: "safety" }); break;
+    case "trip": whatsapp(t.tripMsg(el.dataset.dest)); break;
+    case "help": askHelp(el.dataset.dest); break;
+    case "call": callHelper(); break;
+    case "setup": go({ screen: "setup" }); break;
+    case "addPlace":
+      document.getElementById("plist").insertAdjacentHTML("beforeend",
+        placeEditor({ icon: ICONS[document.querySelectorAll(".pl-edit").length % ICONS.length], name: "", addr: "", fare: "", app: "yango" }));
+      break;
+    case "removePlace": el.closest(".pl-edit").remove(); break;
+    case "save": data = readSetupForm(); save(); toast(t.saved); break;
+    case "share": {
+      data = readSetupForm(); save();
+      const link = `${location.origin}${location.pathname}#setup=${b64encode(data)}`;
+      const msg = `${t.title} 👇\n${link}`;
+      if (navigator.share) { try { await navigator.share({ title: t.title, text: msg }); break; } catch {} }
+      location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      break;
+    }
+  }
+});
+
+render();
+</script>
+</body>
+</html>
