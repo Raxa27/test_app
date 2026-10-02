@@ -62,15 +62,11 @@
             <div class="auth-brand">
               <img src="icon.svg" alt="" width="56" height="56">
               <h2>Member login</h2>
-              <p>Accounts are created by the admin. Log in with the email and password you were given.</p>
-            </div>
-            <div id="a_setup" class="setup-note" hidden>
-              <b>Login isn't set up yet</b>
-              <p>The admin needs to add a Firebase config to <code>www/firebase-config.js</code>. Steps are in the README.</p>
+              <p>Accounts are created by the admin. Log in with the username or email and password you were given.</p>
             </div>
             <div id="a_body">
               <form id="authForm" novalidate>
-                <div class="field"><label for="a_email">Email</label><input id="a_email" type="email" autocomplete="email" placeholder="you@example.com" required></div>
+                <div class="field"><label for="a_email">Username or email</label><input id="a_email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="admin or you@example.com" required></div>
                 <div class="field"><label for="a_pass">Password</label>
                   <div class="pass-wrap"><input id="a_pass" type="password" autocomplete="current-password" minlength="6" placeholder="Your password" required>
                   <button type="button" id="a_show" class="icon-btn" aria-label="Show password"><svg><use href="#i-eye"/></svg></button></div>

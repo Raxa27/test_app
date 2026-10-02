@@ -199,7 +199,7 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
 .dmg-card .sub{font-size:.78rem;color:var(--muted)}
 .dmg-card dl{display:grid;grid-template-columns:1fr auto;gap:4px 8px;margin:12px 0 0;font-size:.84rem}
 .dmg-card dt{color:var(--muted)}.dmg-card dd{margin:0;font-weight:600;text-align:right}
-.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:700;letter-spacing:.3px}
+.pill{white-space:nowrap;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:700;letter-spacing:.3px}
 .pill.ok{background:rgba(52,211,153,.12);color:var(--ok)}
 .pill.bad{background:rgba(248,113,113,.12);color:var(--bad)}
 .pill.gold{background:rgba(255,190,46,.14);color:var(--accent-2)}

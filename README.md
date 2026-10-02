@@ -29,6 +29,10 @@ Visitors who aren't logged in see the app as a demo: the home screen is visible,
 
 The lock runs in the browser, so it keeps casual visitors out but won't stop someone who edits the page code. Members' saved data lives in Firestore behind the security rules.
 
+### Built-in admin account
+
+Without any setup, the app has one built-in account: username `admin`, password `admin123`. It unlocks every tool, but its data stays on that device (no cloud sync). Change this password before you share the app: put the SHA-256 hash of a new, long password in `FF_LOCAL_ACCOUNTS` in [`www/firebase-config.js`](www/firebase-config.js) (`echo -n 'new password' | sha256sum`). You can add more built-in accounts there the same way. The page code is public, so anyone who reads it can try to guess these passwords; use Firebase accounts for members.
+
 ### Turn on login (free Spark plan is enough)
 
 1. Go to [console.firebase.google.com](https://console.firebase.google.com) and create a project.
