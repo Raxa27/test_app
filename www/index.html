@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14110f">
+<title>FF Toolkit</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <h1>FF Toolkit</h1>
+  <button id="installBtn" class="btn small" hidden>Install</button>
+</header>
+
+<nav id="tabs" role="tablist" aria-label="Tools">
+  <button data-tab="sens" class="active">Sensitivity</button>
+  <button data-tab="dmg">Damage</button>
+  <button data-tab="cmp">Weapons</button>
+  <button data-tab="chars">Characters</button>
+  <button data-tab="stats">Stats</button>
+  <button data-tab="tour">Tournament</button>
+  <button data-tab="budget">Diamonds</button>
+  <button data-tab="names">Names</button>
+  <button data-tab="codes">Codes</button>
+</nav>
+
+<main>
+  <!-- Sensitivity -->
+  <section id="sens" class="panel active">
+    <h2>Sensitivity Calculator</h2>
+    <p class="hint">Ye ek starting point hai. Training mode mein test karke 2-5 points upar-neeche adjust karo.</p>
+    <div class="grid">
+      <label>Screen size (inch)<input id="s_size" type="number" step="0.1" value="6.5"></label>
+      <label>RAM (GB)<input id="s_ram" type="number" value="4"></label>
+      <label>Playstyle
+        <select id="s_style"><option value="rusher">Rusher</option><option value="balanced" selected>Balanced</option><option value="sniper">Sniper</option></select>
+      </label>
+      <label>Fingers
+        <select id="s_claw"><option>2</option><option selected>3</option><option>4</option></select>
+      </label>
+    </div>
+    <button class="btn" id="s_go">Calculate</button>
+    <div id="s_out" class="result"></div>
+  </section>
+
+  <!-- Damage -->
+  <section id="dmg" class="panel">
+    <h2>Damage / Headshot Calculator</h2>
+    <p class="hint">Weapon stats approximate hain aur patch ke saath badalte hain. "Weapons" tab mein inhe edit kar sakte ho.</p>
+    <div class="grid">
+      <label>Weapon<select id="d_weapon"></select></label>
+      <label>Distance (m)<input id="d_dist" type="number" value="20"></label>
+      <label>Vest level<select id="d_vest"><option value="0">None</option><option value="1">Lv1</option><option value="2">Lv2</option><option value="3">Lv3</option></select></label>
+      <label>Helmet level<select id="d_helm"><option value="0">None</option><option value="1">Lv1</option><option value="2">Lv2</option><option value="3">Lv3</option></select></label>
+      <label>Enemy HP<input id="d_hp" type="number" value="200"></label>
+    </div>
+    <button class="btn" id="d_go">Calculate</button>
+    <div id="d_out" class="result"></div>
+  </section>
+
+  <!-- Weapon compare -->
+  <section id="cmp" class="panel">
+    <h2>Weapon Comparison</h2>
+    <div class="grid">
+      <label>Weapon A<select id="c_a"></select></label>
+      <label>Weapon B<select id="c_b"></select></label>
+    </div>
+    <div id="c_out" class="result"></div>
+    <details>
+      <summary>Weapon data edit karo</summary>
+      <div id="c_edit"></div>
+      <button class="btn small ghost" id="c_reset">Reset to default</button>
+    </details>
+  </section>
+
+  <!-- Characters -->
+  <section id="chars" class="panel">
+    <h2>Character Combo Finder</h2>
+    <p class="hint">Abilities game updates ke saath change hoti hain, isliye in-game description bhi check karo.</p>
+    <div class="grid">
+      <label>Aapka role
+        <select id="ch_role">
+          <option value="rush">Rush / Aggressive</option>
+          <option value="heal">Sustain / Healing</option>
+          <option value="support">Team Support</option>
+          <option value="mobility">Mobility / Rotation</option>
+          <option value="defense">Defense / Gloo wall</option>
+        </select>
+      </label>
+    </div>
+    <div id="ch_out" class="result"></div>
+  </section>
+
+  <!-- Stats -->
+  <section id="stats" class="panel">
+    <h2>Match Stats Tracker</h2>
+    <div class="grid">
+      <label>Mode<select id="m_mode"><option>BR</option><option>CS</option><option>Custom</option></select></label>
+      <label>Kills<input id="m_kills" type="number" min="0" value="0"></label>
+      <label>Damage<input id="m_dmg" type="number" min="0" value="0"></label>
+      <label>Rank<input id="m_rank" type="number" min="1" value="1"></label>
+    </div>
+    <button class="btn" id="m_add">Match add karo</button>
+    <div id="m_sum" class="cards"></div>
+    <div id="m_chart"></div>
+    <div id="m_list"></div>
+    <div class="row">
+      <button class="btn small ghost" id="m_export">Export</button>
+      <label class="btn small ghost filebtn">Import<input id="m_import" type="file" accept="application/json" hidden></label>
+      <button class="btn small danger" id="m_clear">Clear all</button>
+    </div>
+  </section>
+
+  <!-- Tournament -->
+  <section id="tour" class="panel">
+    <h2>Squad / Tournament Manager</h2>
+    <p class="hint">Points: 1st=12, 2nd=9, 3rd=8, 4th=7, 5th=6, 6th=5, 7th=4, 8th=3, 9th=2, 10th=1, har kill = 1 point.</p>
+    <div class="row">
+      <input id="t_team" placeholder="Team name">
+      <button class="btn small" id="t_add_team">Team add</button>
+    </div>
+    <div class="grid">
+      <label>Team<select id="t_sel"></select></label>
+      <label>Placement<input id="t_place" type="number" min="1" value="1"></label>
+      <label>Kills<input id="t_kills" type="number" min="0" value="0"></label>
+    </div>
+    <button class="btn" id="t_add_res">Match result add</button>
+    <div id="t_table"></div>
+    <button class="btn small danger" id="t_clear">Reset tournament</button>
+  </section>
+
+  <!-- Diamonds -->
+  <section id="budget" class="panel">
+    <h2>Diamond Budget Planner</h2>
+    <div class="grid">
+      <label>Abhi ke diamonds<input id="b_have" type="number" min="0" value="0"></label>
+      <label>Rate: 100 diamonds ki price<input id="b_rate" type="number" min="0" step="0.01" value="80"></label>
+    </div>
+    <div class="row">
+      <input id="b_name" placeholder="Goal (bundle, skin...)">
+      <input id="b_cost" type="number" min="0" placeholder="Diamonds">
+      <button class="btn small" id="b_add">Add</button>
+    </div>
+    <div id="b_out"></div>
+  </section>
+
+  <!-- Names -->
+  <section id="names" class="panel">
+    <h2>Stylish Name Generator</h2>
+    <input id="n_in" placeholder="Apna naam likho" maxlength="20">
+    <div id="n_out"></div>
+    <p class="hint">Kuch symbols in-game name mein allowed nahi hote. Copy karke try karo.</p>
+  </section>
+
+  <!-- Codes -->
+  <section id="codes" class="panel">
+    <h2>Redeem Code Tracker</h2>
+    <p class="hint">Codes sirf official site pe redeem karo: <a href="https://reward.ff.garena.com" target="_blank" rel="noopener">reward.ff.garena.com</a>. Kisi ko apna login ya password mat do.</p>
+    <div class="row">
+      <input id="r_code" placeholder="Code" maxlength="20">
+      <input id="r_exp" type="date">
+      <button class="btn small" id="r_add">Add</button>
+    </div>
+    <div id="r_list"></div>
+  </section>
+</main>
+
+<div id="toast" role="status"></div>
+<script src="app.js"></script>
+</body>
+</html>
