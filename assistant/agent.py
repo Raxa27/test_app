@@ -6,7 +6,10 @@ import anthropic
 
 from .tools import ALL_TOOLS, PENDING_ACTIONS
 
-MODEL = os.environ.get("ASSISTANT_MODEL", "claude-opus-5-5")
+# Short names people are likely to type in ASSISTANT_MODEL.
+MODEL_ALIASES = {"opus": "claude-opus-5-5", "sonnet": "claude-sonnet-5-5"}
+_model = os.environ.get("ASSISTANT_MODEL", "").strip()
+MODEL = MODEL_ALIASES.get(_model.lower(), _model) or "claude-opus-5-5"
 EFFORT = os.environ.get("ASSISTANT_EFFORT", "medium")
 MAX_PAUSE_RESTARTS = 5
 
