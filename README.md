@@ -72,7 +72,7 @@ GitHub Pages: in the repo go to **Settings → Pages → Source** and choose **G
 
 ## Android app (APK)
 
-**From GitHub (easiest):** every push runs the **Build web + Android** workflow. Open the run in the Actions tab and download the `ff-toolkit-apk` artifact. It contains `app-debug.apk`; install it on your phone (allow "Install unknown apps").
+**Direct download (easiest):** every push builds the app and publishes it to the **FF Toolkit (latest build)** release: <https://github.com/Raxa27/test_app/releases/latest/download/FF-Toolkit.apk>. Open that link on your phone and install it (allow "Install unknown apps"). The same file is also attached to each run in the Actions tab as `ff-toolkit-apk`.
 
 **On your own computer:** you need Node 22, JDK 21 and Android Studio.
 
