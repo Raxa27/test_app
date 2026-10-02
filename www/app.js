@@ -47,6 +47,13 @@ function growBars(root) {
     root.querySelectorAll(".bar i[data-w]").forEach((i) => { i.style.width = i.dataset.w + "%"; })));
 }
 const bar = (pct, cls = "") => `<div class="bar ${cls}"><i data-w="${clamp(pct, 0, 100).toFixed(1)}"></i></div>`;
+/* Destructive actions need a second tap within 3s (native confirm() is blocked in some webviews). */
+function confirmTap(btn, msg) {
+  if (btn.dataset.armed) { delete btn.dataset.armed; btn.classList.remove("armed"); return true; }
+  btn.dataset.armed = "1"; btn.classList.add("armed"); toast(msg, false);
+  setTimeout(() => { delete btn.dataset.armed; btn.classList.remove("armed"); }, 3000);
+  return false;
+}
 function bump(el) { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
 
 /* Button ripple */
@@ -373,7 +380,7 @@ $("m_add").onclick = () => {
   save("matches", matches); renderStats(); toast(matches.at(-1).rank === 1 ? "Booyah! Match save ho gaya" : "Match save ho gaya");
 };
 $("m_list").onclick = (e) => { const b = e.target.closest("[data-del]"); if (b) { matches.splice(+b.dataset.del, 1); save("matches", matches); renderStats(); } };
-$("m_clear").onclick = () => { if (matches.length && confirm("Saare matches delete karne hain?")) { matches = []; save("matches", matches); renderStats(); } };
+$("m_clear").onclick = (e) => { if (matches.length && confirmTap(e.currentTarget, "Saare matches delete karne ke liye dobara dabao")) { matches = []; save("matches", matches); renderStats(); } };
 $("m_export").onclick = () => {
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([JSON.stringify(matches, null, 2)], { type: "application/json" }));
@@ -419,7 +426,7 @@ $("t_add_res").onclick = () => {
   t.results.push({ place: Math.max(1, Math.floor(num("t_place"))), kills: Math.max(0, Math.floor(num("t_kills"))) });
   save("tour", tour); renderTour(); toast(`${t.name}: result add ho gaya`);
 };
-$("t_clear").onclick = () => { if (tour.teams.length && confirm("Poora tournament reset karna hai?")) { tour = { teams: [] }; save("tour", tour); renderTour(); } };
+$("t_clear").onclick = (e) => { if (tour.teams.length && confirmTap(e.currentTarget, "Tournament reset karne ke liye dobara dabao")) { tour = { teams: [] }; save("tour", tour); renderTour(); } };
 onShow.tour = renderTour;
 
 /* ---------- Diamond budget ---------- */
