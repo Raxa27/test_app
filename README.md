@@ -42,6 +42,19 @@ The lock runs in the browser, so it keeps casual visitors out but won't stop som
 
 Without any setup, the app has one built-in account: username `admin`, password `admin123`. It unlocks every tool, but its data stays on that device (no cloud sync). Change this password before you share the app: put the SHA-256 hash of a new, long password in `FF_LOCAL_ACCOUNTS` in [`www/firebase-config.js`](www/firebase-config.js) (`echo -n 'new password' | sha256sum`). You can add more built-in accounts there the same way. The page code is public, so anyone who reads it can try to guess these passwords; use Firebase accounts for members.
 
+### Add users from the Admin panel
+
+Log in with a built-in admin account and open **Account → Admin panel** (also in the sidebar on wider screens). Enter a name, username and password (or tap **Generate**) and pick an access period: 7, 30 or 90 days, or no expiry. The app makes an access code and a ready-to-send message; copy it or tap **Share on WhatsApp**.
+
+The member opens the app, taps **Log in**, enters the username and password, opens **First time here?** and pastes the access code. After that, the username and password work on that phone until the access period ends; then the tools lock again and the member is asked to contact you.
+
+How it works and its limits:
+
+- The code holds the username, name, password hash and expiry, signed with `FF_SIGNING_KEY` in [`www/firebase-config.js`](www/firebase-config.js). A changed or made-up code is rejected.
+- Nothing is stored on a server, so a code can't be cancelled once it's sent. Use short access periods if you may need to cut someone off. Changing `FF_SIGNING_KEY` stops all codes that haven't been used yet.
+- The signing key ships inside the app, so someone who reads the code could make their own access codes. That's the same limit as the browser-side lock itself.
+- The Admin panel keeps a list of the logins you created on your own device. Passwords aren't saved anywhere.
+
 ### Turn on login (free Spark plan is enough)
 
 1. Go to [console.firebase.google.com](https://console.firebase.google.com) and create a project.
