@@ -1,0 +1,61 @@
+name: Build web + Android
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # publish the APK to the "apk-latest" release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npx cap add android
+      - run: npx cap sync android
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk FF-Toolkit.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ff-toolkit-apk
+          path: FF-Toolkit.apk
+      - name: Publish APK to the latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-latest
+          name: FF Toolkit (latest build)
+          body: Latest Android build from ${{ github.ref_name }} (${{ github.sha }}). Download FF-Toolkit.apk below and install it on your phone.
+          make_latest: true
+          files: FF-Toolkit.apk
+
+  pages:
+    # Needs Settings -> Pages -> Source: "GitHub Actions"
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: www
+      - id: deploy
+        uses: actions/deploy-pages@v4

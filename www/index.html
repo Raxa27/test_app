@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Nineteen tools for Free Fire players: sensitivity, graphics, damage calculator, aim trainer, stats tracker, tournament table and more.">
+<title>FF Toolkit</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rajdhani:wght@600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g-accent" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6a00"/><stop offset="1" stop-color="#ffb800"/></linearGradient>
+  </defs>
+</svg>
+
+<div class="app">
+  <aside class="sidebar" aria-label="Tools">
+    <a class="brand" href="#home">
+      <img src="icon.svg" alt="" width="36" height="36">
+      <span>FF <b>Toolkit</b></span>
+    </a>
+    <nav id="sideNav"></nav>
+    <p class="side-foot">Members get cloud sync</p>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <a id="backBtn" class="icon-btn" href="#home" aria-label="Home"><svg><use href="#i-back"/></svg></a>
+      <a class="brand brand-mobile" href="#home"><img src="icon.svg" alt="" width="30" height="30"><span>FF <b>Toolkit</b></span></a>
+      <div class="top-title"><h1 id="pageTitle"></h1><p id="pageSub"></p></div>
+      <a id="acctBtn" class="acct-btn" href="#account" aria-label="Account" hidden></a>
+      <button id="installBtn" class="btn btn-sm" hidden><svg><use href="#i-download"/></svg>Install</button>
+    </header>
+
+    <main id="view">
+      <!-- Home -->
+      <section id="home" class="page">
+        <div class="hero">
+          <span class="eyebrow">Free Fire companion</span>
+          <h2>Take your game to the <span class="grad">next level</span></h2>
+          <p>Nineteen tools in one place: sensitivity and graphics setup, damage maths, seven training games, match tracking and tournament tables.</p>
+          <div id="homeStats" class="kpis"></div>
+        </div>
+        <div id="toolGrid"></div>
+        <p class="disclaimer">This app is not affiliated with Garena or Free Fire and never connects to the game. No cheats, no hacks.</p>
+      </section>
+
+      <!-- Login -->
+      <section id="login" class="page">
+        <div class="auth-wrap">
+          <div class="card auth-card">
+            <div class="auth-brand">
+              <img src="icon.svg" alt="" width="56" height="56">
+              <h2>Member login</h2>
+              <p>Accounts are created by the admin. Log in with the username or email and password you were given.</p>
+            </div>
+            <div id="a_body">
+              <form id="authForm" novalidate>
+                <div class="field"><label for="a_email">Username or email</label><input id="a_email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="admin or you@example.com" required></div>
+                <div class="field"><label for="a_pass">Password</label>
+                  <div class="pass-wrap"><input id="a_pass" type="password" autocomplete="current-password" minlength="6" placeholder="Your password" required>
+                  <button type="button" id="a_show" class="icon-btn" aria-label="Show password"><svg><use href="#i-eye"/></svg></button></div>
+                </div>
+                <details class="code-box" id="a_code_box">
+                  <summary>First time here? Enter your access code</summary>
+                  <div class="field"><label for="a_code">Access code from the admin</label>
+                    <textarea id="a_code" rows="3" spellcheck="false" autocapitalize="none" placeholder="FFK1.…"></textarea></div>
+                  <p class="note" style="margin:-6px 0 12px">You only need this once on each phone.</p>
+                </details>
+                <p id="a_err" class="form-err" role="alert" hidden></p>
+                <button class="btn btn-block" id="a_submit" type="submit">Log in</button>
+                <button type="button" class="link-btn" id="a_forgot">Forgot password?</button>
+              </form>
+            </div>
+            <div class="contact-box">
+              <span class="label">No account yet?</span>
+              <p>Contact the admin to get your login.</p>
+              <div class="contact-line" data-contact></div>
+            </div>
+            <a class="link-btn guest" href="#home">Explore the demo</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Admin panel (filled in by auth.js) -->
+      <section id="admin" class="page"></section>
+
+      <!-- Account -->
+      <section id="account" class="page">
+        <div id="acct_out"></div>
+      </section>
+
+      <!-- Sensitivity -->
+      <section id="sens" class="page">
+        <div class="layout-2">
+          <div class="card">
+            <h3 class="card-title">Your setup</h3>
+            <div class="field">
+              <div class="field-head"><label for="s_size">Screen size</label><output id="s_size_v"></output></div>
+              <input id="s_size" type="range" min="5" max="8" step="0.1" value="6.5">
+            </div>
+            <div class="field">
+              <div class="field-head"><label for="s_ram">RAM</label><output id="s_ram_v"></output></div>
+              <input id="s_ram" type="range" min="2" max="16" step="1" value="4">
+            </div>
+            <div class="field"><span class="label">Playstyle</span>
+              <div class="seg" data-name="s_style">
+                <label><input type="radio" name="s_style" value="rusher"><span>Rusher</span></label>
+                <label><input type="radio" name="s_style" value="balanced" checked><span>Balanced</span></label>
+                <label><input type="radio" name="s_style" value="sniper"><span>Sniper</span></label>
+              </div>
+            </div>
+            <div class="field"><span class="label">Fingers (claw)</span>
+              <div class="seg">
+                <label><input type="radio" name="s_claw" value="2"><span>2 finger</span></label>
+                <label><input type="radio" name="s_claw" value="3" checked><span>3 finger</span></label>
+                <label><input type="radio" name="s_claw" value="4"><span>4 finger</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3 class="card-title">Recommended sensitivity</h3><button class="btn btn-ghost btn-sm" id="s_copy"><svg><use href="#i-copy"/></svg>Copy</button></div>
+            <div id="s_out" class="sens-list"></div>
+            <p class="note">Use these as a starting point. Test for 5 minutes in the training ground, then adjust by 2 to 5 points either way.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Damage -->
+      <section id="dmg" class="page">
+        <div class="layout-2">
+          <div class="card">
+            <h3 class="card-title">Situation</h3>
+            <div class="field"><label class="label" for="d_weapon">Weapon</label><select id="d_weapon"></select></div>
+            <div class="field">
+              <div class="field-head"><label for="d_dist">Distance</label><output id="d_dist_v"></output></div>
+              <input id="d_dist" type="range" min="0" max="200" step="5" value="20">
+            </div>
+            <div class="field"><span class="label">Enemy vest</span>
+              <div class="seg">
+                <label><input type="radio" name="d_vest" value="0"><span>None</span></label>
+                <label><input type="radio" name="d_vest" value="1"><span>Lv1</span></label>
+                <label><input type="radio" name="d_vest" value="2" checked><span>Lv2</span></label>
+                <label><input type="radio" name="d_vest" value="3"><span>Lv3</span></label>
+              </div>
+            </div>
+            <div class="field"><span class="label">Enemy helmet</span>
+              <div class="seg">
+                <label><input type="radio" name="d_helm" value="0"><span>None</span></label>
+                <label><input type="radio" name="d_helm" value="1"><span>Lv1</span></label>
+                <label><input type="radio" name="d_helm" value="2" checked><span>Lv2</span></label>
+                <label><input type="radio" name="d_helm" value="3"><span>Lv3</span></label>
+              </div>
+            </div>
+            <div class="field"><label class="label" for="d_hp">Enemy HP</label><input id="d_hp" type="number" min="1" value="200" inputmode="numeric"></div>
+          </div>
+          <div class="card">
+            <h3 class="card-title">Result</h3>
+            <div id="d_out"></div>
+            <p class="note">Weapon stats are approximate and change with game patches. You can edit them in Weapon Compare.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Weapon compare -->
+      <section id="cmp" class="page">
+        <div class="card">
+          <div class="versus">
+            <select id="c_a" aria-label="Weapon A"></select>
+            <span class="vs">VS</span>
+            <select id="c_b" aria-label="Weapon B"></select>
+          </div>
+          <div id="c_out"></div>
+        </div>
+        <details class="card">
+          <summary><svg><use href="#i-edit"/></svg>Edit weapon data</summary>
+          <div class="table-wrap"><div id="c_edit"></div></div>
+          <button class="btn btn-ghost btn-sm" id="c_reset">Restore default values</button>
+        </details>
+      </section>
+
+      <!-- Characters -->
+      <section id="chars" class="page">
+        <div class="card">
+          <span class="label">What's your role?</span>
+          <div class="chips" id="ch_roles">
+            <label><input type="radio" name="ch_role" value="rush" checked><span>Rush</span></label>
+            <label><input type="radio" name="ch_role" value="heal"><span>Sustain</span></label>
+            <label><input type="radio" name="ch_role" value="support"><span>Support</span></label>
+            <label><input type="radio" name="ch_role" value="mobility"><span>Rotation</span></label>
+            <label><input type="radio" name="ch_role" value="defense"><span>Defense</span></label>
+          </div>
+        </div>
+        <div id="ch_out" class="char-grid"></div>
+        <p class="note">Abilities change with game updates, so check the in-game description too.</p>
+      </section>
+
+      <!-- Graphics -->
+      <section id="gfx" class="page">
+        <div class="layout-2">
+          <div class="card">
+            <h3 class="card-title">Your phone</h3>
+            <div class="field">
+              <div class="field-head"><label for="g_ram">RAM</label><output id="g_ram_v"></output></div>
+              <input id="g_ram" type="range" min="2" max="16" step="1" value="4">
+            </div>
+            <div class="field"><span class="label">Screen refresh rate</span>
+              <div class="seg">
+                <label><input type="radio" name="g_hz" value="60" checked><span>60 Hz</span></label>
+                <label><input type="radio" name="g_hz" value="90"><span>90 Hz</span></label>
+                <label><input type="radio" name="g_hz" value="120"><span>120 Hz</span></label>
+              </div>
+            </div>
+            <div class="field"><span class="label">Priority</span>
+              <div class="seg">
+                <label><input type="radio" name="g_pri" value="perf" checked><span>Max FPS</span></label>
+                <label><input type="radio" name="g_pri" value="bal"><span>Balanced</span></label>
+                <label><input type="radio" name="g_pri" value="vis"><span>Visuals</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 class="card-title">Recommended in-game settings</h3>
+            <div id="g_out" class="set-grid"></div>
+            <ul id="g_tips" class="tips"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Aim trainer -->
+      <section id="aim" class="page">
+        <div class="kpis kpis-4" id="aim_hud"></div>
+        <div class="card arena-card">
+          <div id="aim_arena" class="arena" aria-label="Aim trainer arena">
+            <div class="arena-msg" id="aim_msg">
+              <b>30-second aim drill</b>
+              <p>Tap the targets as fast as you can. Misses lower your accuracy.</p>
+              <button class="btn" id="aim_start" type="button">Start drill</button>
+            </div>
+          </div>
+        </div>
+        <p class="note">Targets get smaller as your score goes up. Your best score is saved.</p>
+      </section>
+
+      <!-- Reaction test -->
+      <section id="react" class="page">
+        <button id="r_pad" class="react-pad" type="button" data-state="idle">
+          <span class="react-big" id="r_big">Tap to start</span>
+          <span class="react-sub" id="r_sub">Wait for green, then tap as fast as you can. 5 rounds.</span>
+        </button>
+        <div class="kpis kpis-4" id="r_kpis"></div>
+        <div class="card"><h3 class="card-title">This session</h3><div id="r_hist" class="react-hist"></div></div>
+      </section>
+
+      <!-- Drop spot -->
+      <section id="drop" class="page">
+        <div class="card drop-card">
+          <span class="label">Bermuda</span>
+          <div class="drop-result" id="dr_out" aria-live="polite">Where do we drop?</div>
+          <button class="btn" id="dr_spin" type="button"><svg><use href="#i-drop"/></svg>Pick a drop spot</button>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3 class="card-title">Spots in the draw</h3><span class="pill mute" id="dr_count"></span></div>
+          <div class="chips" id="dr_list"></div>
+          <div class="inline-form" style="margin-top:14px">
+            <input id="dr_new" placeholder="Add your own spot" maxlength="24">
+            <button class="btn" id="dr_add" type="button"><svg><use href="#i-plus"/></svg>Add</button>
+          </div>
+          <p class="note">Tap a spot to leave it out of the draw.</p>
+        </div>
+      </section>
+
+      <!-- Team maker -->
+      <section id="teams" class="page">
+        <div class="layout-2">
+          <div class="card">
+            <h3 class="card-title">Players</h3>
+            <div class="field"><label class="label" for="tm_names">One name per line</label>
+              <textarea id="tm_names" rows="8" placeholder="Raxa&#10;Ali&#10;Sam&#10;Zed"></textarea></div>
+            <div class="field"><span class="label">Team size</span>
+              <div class="seg">
+                <label><input type="radio" name="tm_size" value="1"><span>Solo</span></label>
+                <label><input type="radio" name="tm_size" value="2"><span>Duo</span></label>
+                <label><input type="radio" name="tm_size" value="4" checked><span>Squad</span></label>
+              </div>
+            </div>
+            <label class="switch"><input type="checkbox" id="tm_roles" checked><span></span>Give each player a role</label>
+            <button class="btn btn-block" id="tm_go" type="button"><svg><use href="#i-sync"/></svg>Shuffle teams</button>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3 class="card-title">Teams</h3><button class="btn btn-ghost btn-sm" id="tm_copy" type="button"><svg><use href="#i-copy"/></svg>Copy</button></div>
+            <div id="tm_out" class="team-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Training games (filled in by training.js) -->
+      <section id="drag" class="page"></section>
+      <section id="track" class="page"></section>
+      <section id="taps" class="page"></section>
+      <section id="peek" class="page"></section>
+      <section id="spot" class="page"></section>
+
+      <!-- Practice planner -->
+      <section id="practice" class="page">
+        <div class="kpis kpis-4" id="p_kpis"></div>
+        <div class="card">
+          <div class="card-head"><h3 class="card-title">Today's drills</h3><span class="pill mute" id="p_date"></span></div>
+          <div id="p_list" class="list"></div>
+          <p class="note" id="p_note"></p>
+        </div>
+      </section>
+
+      <!-- Stats -->
+      <section id="stats" class="page">
+        <div id="m_sum" class="kpis kpis-4"></div>
+        <div class="layout-2">
+          <div class="card">
+            <h3 class="card-title">New match</h3>
+            <div class="field"><span class="label">Mode</span>
+              <div class="seg">
+                <label><input type="radio" name="m_mode" value="BR" checked><span>Battle Royale</span></label>
+                <label><input type="radio" name="m_mode" value="CS"><span>Clash Squad</span></label>
+                <label><input type="radio" name="m_mode" value="Custom"><span>Custom</span></label>
+              </div>
+            </div>
+            <div class="grid-3">
+              <div class="field"><label class="label" for="m_kills">Kills</label><input id="m_kills" type="number" min="0" value="0" inputmode="numeric"></div>
+              <div class="field"><label class="label" for="m_dmg">Damage</label><input id="m_dmg" type="number" min="0" value="0" inputmode="numeric"></div>
+              <div class="field"><label class="label" for="m_rank">Rank</label><input id="m_rank" type="number" min="1" value="1" inputmode="numeric"></div>
+            </div>
+            <button class="btn btn-block" id="m_add"><svg><use href="#i-plus"/></svg>Save match</button>
+          </div>
+          <div class="card">
+            <h3 class="card-title">Kills in your last 10 matches</h3>
+            <div id="m_chart"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3 class="card-title">History</h3>
+            <div class="actions">
+              <button class="icon-btn" id="m_export" title="Export" aria-label="Export"><svg><use href="#i-download"/></svg></button>
+              <label class="icon-btn" title="Import" aria-label="Import"><svg><use href="#i-upload"/></svg><input id="m_import" type="file" accept="application/json" hidden></label>
+              <button class="icon-btn danger" id="m_clear" title="Clear all" aria-label="Clear all"><svg><use href="#i-trash"/></svg></button>
+            </div>
+          </div>
+          <div id="m_list" class="list"></div>
+        </div>
+      </section>
+
+      <!-- Tournament -->
+      <section id="tour" class="page">
+        <div class="layout-2">
+          <div class="card">
+            <h3 class="card-title">Teams</h3>
+            <div class="inline-form">
+              <input id="t_team" placeholder="Team name" maxlength="24">
+              <button class="btn" id="t_add_team"><svg><use href="#i-plus"/></svg>Add</button>
+            </div>
+            <h3 class="card-title spaced">Match result</h3>
+            <div class="field"><label class="label" for="t_sel">Team</label><select id="t_sel"></select></div>
+            <div class="grid-2">
+              <div class="field"><label class="label" for="t_place">Placement</label><input id="t_place" type="number" min="1" value="1" inputmode="numeric"></div>
+              <div class="field"><label class="label" for="t_kills">Kills</label><input id="t_kills" type="number" min="0" value="0" inputmode="numeric"></div>
+            </div>
+            <button class="btn btn-block" id="t_add_res">Add result</button>
+            <p class="note">Points: 1st 12 · 2nd 9 · 3rd 8 · 4th 7 · 5th 6 · 6th 5 · 7th 4 · 8th 3 · 9th 2 · 10th 1 · +1 per kill</p>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3 class="card-title">Leaderboard</h3><button class="icon-btn danger" id="t_clear" title="Reset" aria-label="Reset tournament"><svg><use href="#i-trash"/></svg></button></div>
+            <div id="t_table"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diamonds -->
+      <section id="budget" class="page">
+        <div class="layout-2">
+          <div class="card">
+            <h3 class="card-title">Wallet</h3>
+            <div class="grid-2">
+              <div class="field"><label class="label" for="b_have">Diamonds you have</label><input id="b_have" type="number" min="0" value="0" inputmode="numeric"></div>
+              <div class="field"><label class="label" for="b_rate">Price per 100 diamonds</label><input id="b_rate" type="number" min="0" step="0.01" value="80" inputmode="decimal"></div>
+            </div>
+            <h3 class="card-title spaced">New goal</h3>
+            <div class="inline-form">
+              <input id="b_name" placeholder="Bundle, skin, pass..." maxlength="40">
+              <input id="b_cost" type="number" min="0" placeholder="💎" inputmode="numeric" class="narrow">
+              <button class="btn" id="b_add"><svg><use href="#i-plus"/></svg></button>
+            </div>
+          </div>
+          <div class="card">
+            <h3 class="card-title">Progress</h3>
+            <div id="b_sum"></div>
+            <div id="b_out" class="list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Names -->
+      <section id="names" class="page">
+        <div class="card">
+          <input id="n_in" class="input-xl" placeholder="Type your name…" maxlength="20" autocomplete="off">
+        </div>
+        <div id="n_out" class="name-grid"></div>
+        <p class="note">Some symbols aren't allowed in in-game names. Copy one and try it.</p>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-gfx" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+  <symbol id="i-aim" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-react" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6M12 2v3"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-teams" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .6 3.5 2.3 3.5 5.2"/></symbol>
+  <symbol id="i-practice" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m8 12 2.5 2.5L16 9"/></symbol>
+  <symbol id="i-drag" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5"/><path d="M12 21V10M8 14l4-4 4 4"/></symbol>
+  <symbol id="i-track" viewBox="0 0 24 24"><path d="M3 17c3-6 6-9 9-9s5 3 9-2"/><circle cx="12" cy="8" r="2.5"/></symbol>
+  <symbol id="i-taps" viewBox="0 0 24 24"><path d="M9 11V5a2 2 0 0 1 4 0v6M13 10a2 2 0 0 1 4 0v3a7 7 0 0 1-7 7 6 6 0 0 1-5-3l-2-4a2 2 0 0 1 3-2l2 2"/></symbol>
+  <symbol id="i-peek" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="18" rx="1"/><circle cx="18" cy="8" r="2"/><path d="M15 13h4"/></symbol>
+  <symbol id="i-spot" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-5-5"/><circle cx="11" cy="11" r="2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6l-8-3z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-sens" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="1.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></symbol>
+  <symbol id="i-dmg" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></symbol>
+  <symbol id="i-cmp" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17V11M13 17V6M18 17v-4"/></symbol>
+  <symbol id="i-chars" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></symbol>
+  <symbol id="i-stats" viewBox="0 0 24 24"><path d="M22 12h-4l-3 8L9 4l-3 8H2"/></symbol>
+  <symbol id="i-tour" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></symbol>
+  <symbol id="i-budget" viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 12L2 9l4-6z"/><path d="M2 9h20M9 3l3 18 3-18"/></symbol>
+  <symbol id="i-names" viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 21V9M7 14l5-5 5 5M5 3h14"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.8A6 6 0 1 0 6 17.7"/><path d="M6 19h11.5"/></symbol>
+  <symbol id="i-sync" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16M3 12a9 9 0 0 1 15.5-6.2L21 8M21 3v5h-5M3 21v-5h5"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></symbol>
+</svg>
+<script src="firebase-config.js"></script>
+<script src="app.js"></script>
+<script src="training.js"></script>
+<script src="auth.js"></script>
+</body>
+</html>
