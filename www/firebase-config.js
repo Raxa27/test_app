@@ -23,5 +23,9 @@ window.FF_ADMIN_CONTACT = { label: "", value: "", href: "" };
 // (for example: echo -n 'newpassword' | sha256sum) and put it in "sha256".
 // The page code is public, so use long passwords here and move members to Firebase when you can.
 window.FF_LOCAL_ACCOUNTS = [
-  { username: "admin", name: "Admin", sha256: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9" },
+  { username: "admin", name: "Admin", role: "admin", sha256: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9" },
 ];
+
+// Signs the access codes the admin creates in the Admin panel. Changing it cancels every code issued so far
+// (members who already activated a code keep their login on that device until it expires).
+window.FF_SIGNING_KEY = "9def0b006c9fbbeca7bce5d25b08a2a5eb436634799b4aa9";

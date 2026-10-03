@@ -39,7 +39,7 @@
 
   /* ---------- Built-in accounts (no Firebase) ---------- */
   // Plain SHA-256 so it also works where crypto.subtle is missing (file:// and older webviews).
-  function sha256(str) {
+  function sha256Bytes(bytes) {
     const K = [], H = [], composite = {};
     for (let c = 2, n = 0; n < 64; c++) {
       if (composite[c]) continue;
@@ -48,7 +48,7 @@
       K[n++] = (Math.pow(c, 1 / 3) * 4294967296) | 0;
     }
     const ror = (x, n) => (x >>> n) | (x << (32 - n));
-    const bytes = new TextEncoder().encode(str), len = bytes.length, size = ((len + 9 + 63) >> 6) << 6;
+    const len = bytes.length, size = ((len + 9 + 63) >> 6) << 6;
     const m = new Uint8Array(size); m.set(bytes); m[len] = 0x80;
     const dv = new DataView(m.buffer);
     dv.setUint32(size - 8, Math.floor((len * 8) / 4294967296)); dv.setUint32(size - 4, (len * 8) >>> 0);
@@ -67,13 +67,50 @@
       }
       [a, b, c, d, e, f, g, k].forEach((v, i) => { h[i] = (h[i] + v) | 0; });
     }
-    return h.map((x) => (x >>> 0).toString(16).padStart(8, "0")).join("");
+    return Uint8Array.from(h.flatMap((x) => [(x >>> 24) & 255, (x >>> 16) & 255, (x >>> 8) & 255, x & 255]));
   }
-  const findLocal = (name) => LOCAL.find((u) => u && u.username && u.username.toLowerCase() === String(name).toLowerCase());
-  const localUser = (acc) => ({ uid: "local:" + acc.username, displayName: acc.name || acc.username, email: "", local: true });
+  const enc = (s) => new TextEncoder().encode(s);
+  const hex = (b) => Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+  const sha256 = (str) => hex(sha256Bytes(enc(str)));
+  function hmac(keyStr, msgStr) {
+    let key = enc(keyStr); if (key.length > 64) key = sha256Bytes(key);
+    const k = new Uint8Array(64); k.set(key);
+    const msg = enc(msgStr), inner = new Uint8Array(64 + msg.length), outer = new Uint8Array(96);
+    for (let i = 0; i < 64; i++) { inner[i] = k[i] ^ 0x36; outer[i] = k[i] ^ 0x5c; }
+    inner.set(msg, 64); outer.set(sha256Bytes(inner), 64);
+    return hex(sha256Bytes(outer));
+  }
+
+  /* ---------- Access codes: logins the admin creates in the Admin panel ---------- */
+  // A code carries the username, name, password hash and expiry, signed with FF_SIGNING_KEY.
+  // The member pastes it once on the login page; after that the login lives on their device.
+  const KEY = String(window.FF_SIGNING_KEY || "ff-toolkit");
+  const b64u = (s) => btoa(String.fromCharCode(...enc(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const unb64u = (s) => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0)));
+  function makeCode(p) {
+    const body = b64u(JSON.stringify(p));
+    return `FFK1.${body}.${hmac(KEY, body).slice(0, 24)}`;
+  }
+  function readCode(code) {
+    const m = /^FFK1\.([A-Za-z0-9_-]+)\.([0-9a-f]{24})$/.exec(String(code).replace(/\s+/g, ""));
+    if (!m || hmac(KEY, m[1]).slice(0, 24) !== m[2]) return null;
+    try { const p = JSON.parse(unb64u(m[1])); return p && p.u && p.h ? p : null; } catch { return null; }
+  }
+  const loadMembers = () => { try { return JSON.parse(localStorage.getItem("member_accounts")) || []; } catch { return []; } };
+  const saveMembers = (list) => { try { localStorage.setItem("member_accounts", JSON.stringify(list)); } catch {} };
+  const expired = (acc) => !!acc.e && Date.now() > acc.e;
+  const fmtDate = (ms) => new Date(ms).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
+  // Built-in accounts from the config file, then members activated on this device with an access code.
+  const allAccounts = () => [
+    ...LOCAL.filter((u) => u && u.username).map((u) => ({ username: u.username, name: u.name, sha256: u.sha256, role: u.role || "admin", e: 0 })),
+    ...loadMembers().map((p) => ({ username: p.u, name: p.n, sha256: p.h, role: "member", e: p.e || 0 })),
+  ];
+  const findLocal = (name) => allAccounts().find((u) => u.username.toLowerCase() === String(name).toLowerCase());
+  const localUser = (acc) => ({ uid: "local:" + acc.username, displayName: acc.name || acc.username, email: "", local: true, role: acc.role, expires: acc.e });
   function localLogin(name, pass) {
     const acc = findLocal(name);
     if (!acc || sha256(pass) !== String(acc.sha256).toLowerCase()) return false;
+    if (expired(acc)) return "expired";
     try { localStorage.setItem("local_session", JSON.stringify(acc.username)); } catch {}
     setUser(localUser(acc));
     return true;
@@ -82,7 +119,8 @@
     let name = null;
     try { name = JSON.parse(localStorage.getItem("local_session")); } catch {}
     const acc = name && findLocal(name);
-    if (acc) user = localUser(acc);
+    if (acc && !expired(acc)) user = localUser(acc);
+    else if (acc) { try { localStorage.removeItem("local_session"); } catch {} }
   }
   function setUser(u) {
     user = u;
@@ -157,11 +195,23 @@
     const email = $("a_email").value.trim(), pass = $("a_pass").value;
     if (!email) return showErr("Enter your username or email.");
     if (!pass) return showErr("Enter your password.");
+    const code = $("a_code").value.trim();
+    if (code) {
+      const p = readCode(code);
+      if (!p) return showErr("That access code isn't valid. Copy the whole code from the admin's message.");
+      if (p.u.toLowerCase() !== email.toLowerCase()) return showErr("This access code is for a different username.");
+      if (p.e && Date.now() > p.e) return showErr(`This access code expired on ${fmtDate(p.e)}. Contact the admin for a new one.`);
+      if (LOCAL.some((u) => u.username && u.username.toLowerCase() === p.u.toLowerCase())) return showErr("This username is reserved.");
+      saveMembers([...loadMembers().filter((m) => m.u.toLowerCase() !== p.u.toLowerCase()), p]);
+    }
     if (findLocal(email)) {
-      if (localLogin(email, pass)) { showErr(""); $("a_pass").value = ""; window.FF.toast("Logged in"); }
+      const r = localLogin(email, pass);
+      if (r === "expired") showErr(`Your access expired on ${fmtDate(findLocal(email).e)}. Contact the admin to renew it.`);
+      else if (r) { showErr(""); $("a_pass").value = ""; $("a_code").value = ""; window.FF.toast("Logged in"); }
       else showErr("Wrong username or password.");
       return;
     }
+    if (!email.includes("@")) return showErr("No account with that username on this device. If the admin sent you an access code, open “First time here?” and paste it.");
     if (!email.includes("@")) return showErr("Wrong username or password.");
     if (!auth) return showErr(cfg ? "The login service is still loading. Try again in a moment." : "Wrong username or password.");
     showErr(""); busy(true);
@@ -192,6 +242,7 @@
     btn.classList.toggle("signed", !!user);
     btn.href = user ? "#account" : "#login";
     document.querySelectorAll("[data-contact]").forEach((el) => { el.innerHTML = contactHtml(); el.hidden = !contact.value; });
+    document.body.classList.toggle("is-admin", isAdmin());
 
     const out = $("acct_out");
     if (!user) {
@@ -203,9 +254,10 @@
       out.innerHTML = `
         <div class="card profile">
           <span class="profile-avatar">${initial(user)}</span>
-          <div class="grow"><h3>${esc(nameOf(user))}</h3><p>Built-in account</p></div>
-          <span class="pill ok">Member</span>
+          <div class="grow"><h3>${esc(nameOf(user))}</h3><p>@${esc(user.uid.slice(6))}${user.expires ? ` · access until ${fmtDate(user.expires)}` : ""}</p></div>
+          <span class="pill ${isAdmin() ? "gold" : "ok"}">${isAdmin() ? "Admin" : "Member"}</span>
         </div>
+        ${isAdmin() ? `<a class="btn btn-block admin-cta" href="#admin"><svg><use href="#i-shield"/></svg>Admin panel: add users</a>` : ""}
         <div class="card"><div class="card-head"><h3 class="card-title">Saved on this device</h3><span class="pill mute">No cloud sync</span></div>
           <p class="note" style="margin:0">This account doesn't use Firebase, so your data stays on this device. It's still here after you log out.</p></div>
         <button class="btn btn-ghost btn-block danger-btn" id="acct_logout" type="button"><svg><use href="#i-logout"/></svg>Log out</button>`;
@@ -237,6 +289,108 @@
       window.FF.toast("Logged out");
     };
   }
+
+  /* ---------- Admin panel (built-in admin accounts only) ---------- */
+  const isAdmin = () => !!(user && user.local && user.role === "admin");
+  const PERIODS = [["7", "7 days"], ["30", "30 days"], ["90", "90 days"], ["0", "No expiry"]];
+  const loadIssued = () => { try { return JSON.parse(localStorage.getItem("issued_logins")) || []; } catch { return []; } };
+  const saveIssued = (l) => { try { localStorage.setItem("issued_logins", JSON.stringify(l)); } catch {} };
+  function randomPass() {
+    const abc = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789", r = new Uint32Array(10);
+    (window.crypto || {}).getRandomValues ? crypto.getRandomValues(r) : r.forEach((_, i) => { r[i] = Math.random() * 1e9; });
+    return Array.from(r, (x) => abc[x % abc.length]).join("");
+  }
+  const message = (n, u, pass, code, e) => `FF Toolkit login${n ? ` for ${n}` : ""}
+
+Username: ${u}
+Password: ${pass}
+Access: ${e ? `until ${fmtDate(e)}` : "no expiry"}
+
+First login: open the app, tap Log in, enter your username and password, then open "First time here?" and paste this access code:
+
+${code}`;
+  let lastMsg = "";
+  function renderAdmin() {
+    const page = $("admin");
+    if (!page.dataset.ready) {
+      page.dataset.ready = "1";
+      page.innerHTML = `
+        <div class="layout-2">
+          <div class="card">
+            <h3 class="card-title">Add a user</h3>
+            <form id="ad_form" novalidate>
+              <div class="field"><label for="ad_name">Name</label><input id="ad_name" maxlength="24" placeholder="Player name (optional)"></div>
+              <div class="field"><label for="ad_user">Username</label><input id="ad_user" maxlength="20" autocapitalize="none" spellcheck="false" placeholder="e.g. ali07"></div>
+              <div class="field"><label for="ad_pass">Password</label>
+                <div class="pass-wrap"><input id="ad_pass" maxlength="40" autocapitalize="none" spellcheck="false" placeholder="At least 6 characters">
+                <button type="button" class="btn btn-ghost btn-sm" id="ad_gen">Generate</button></div></div>
+              <div class="field"><span class="label">Access period</span>
+                <div class="seg">${PERIODS.map(([v, l], i) => `<label><input type="radio" name="ad_days" value="${v}" ${i === 1 ? "checked" : ""}><span>${l}</span></label>`).join("")}</div></div>
+              <p id="ad_err" class="form-err" role="alert" hidden></p>
+              <button class="btn btn-block" type="submit"><svg><use href="#i-plus"/></svg>Create login</button>
+            </form>
+          </div>
+          <div class="card" id="ad_result_card">
+            <h3 class="card-title">Send this to the user</h3>
+            <div id="ad_result"><div class="empty"><svg><use href="#i-shield"/></svg>Create a login and the message to send appears here.</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3 class="card-title">Logins you've created</h3><span class="pill mute" id="ad_count"></span></div>
+          <div id="ad_list" class="list"></div>
+          <p class="note">This list is kept on this device. A login keeps working on the member's phone until it expires, so use short access periods if you may need to cut someone off.</p>
+        </div>`;
+      $("ad_gen").onclick = () => { $("ad_pass").value = randomPass(); };
+      $("ad_form").addEventListener("submit", createLogin);
+      $("ad_list").addEventListener("click", (e) => {
+        const b = e.target.closest("button"); if (!b) return;
+        const list = loadIssued(), item = list[+b.dataset.i];
+        if (!item) return;
+        if (b.dataset.act === "copy") window.FF.copy(item.code, b);
+        if (b.dataset.act === "del") { list.splice(+b.dataset.i, 1); saveIssued(list); renderIssued(); }
+      });
+      $("ad_result").addEventListener("click", (e) => {
+        const b = e.target.closest("[data-copy-msg]"); if (b) window.FF.copy(lastMsg, b);
+      });
+    }
+    renderIssued();
+  }
+  function renderIssued() {
+    const list = loadIssued();
+    $("ad_count").textContent = `${list.length} total`;
+    $("ad_list").innerHTML = list.length ? list.map((x, i) => {
+      const exp = x.e && Date.now() > x.e;
+      return `<div class="item" style="--i:${i}"><span class="avatar sm" style="--h:${(x.u.charCodeAt(0) * 37) % 360}">${esc(x.u.charAt(0).toUpperCase())}</span>
+        <div class="grow"><div class="title">${esc(x.n || x.u)} <span class="pill ${exp ? "bad" : "ok"}">${exp ? "Expired" : "Active"}</span></div>
+        <div class="meta">@${esc(x.u)} · ${x.e ? `${exp ? "expired" : "until"} ${fmtDate(x.e)}` : "no expiry"} · created ${fmtDate(x.i)}</div></div>
+        <div class="actions"><button class="icon-btn" data-act="copy" data-i="${i}" aria-label="Copy access code"><svg><use href="#i-copy"/></svg></button>
+        <button class="icon-btn danger" data-act="del" data-i="${i}" aria-label="Remove from list"><svg><use href="#i-trash"/></svg></button></div></div>`;
+    }).join("") : `<div class="empty"><svg><use href="#i-teams"/></svg>No logins created yet.</div>`;
+  }
+  function createLogin(e) {
+    e.preventDefault();
+    const err = (m) => { $("ad_err").textContent = m; $("ad_err").hidden = !m; };
+    const n = $("ad_name").value.trim().slice(0, 24), u = $("ad_user").value.trim().toLowerCase(), pass = $("ad_pass").value;
+    if (!/^[a-z0-9_.]{3,20}$/.test(u)) return err("Usernames are 3–20 characters: letters, numbers, dots or underscores.");
+    if (LOCAL.some((x) => x.username && x.username.toLowerCase() === u)) return err("That username is reserved for a built-in account.");
+    if (pass.length < 6) return err("Use a password with at least 6 characters, or tap Generate.");
+    err("");
+    const days = +(document.querySelector('input[name="ad_days"]:checked') || {}).value || 0;
+    const now = Date.now(), exp = days ? now + days * 864e5 : 0;
+    const code = makeCode({ u, n, h: sha256(pass), e: exp, i: now });
+    saveIssued([{ u, n, e: exp, i: now, code }, ...loadIssued().filter((x) => x.u !== u)]);
+    lastMsg = message(n, u, pass, code, exp);
+    $("ad_result").innerHTML = `<pre class="msg-box">${esc(lastMsg)}</pre>
+      <div class="row-btns"><button class="btn" type="button" data-copy-msg><svg><use href="#i-copy"/></svg>Copy message</button>
+      <a class="btn btn-ghost" href="https://wa.me/?text=${encodeURIComponent(lastMsg)}" target="_blank" rel="noopener">Share on WhatsApp</a></div>
+      <p class="note">The password isn't saved anywhere, so copy this message now.</p>`;
+    ["ad_name", "ad_user", "ad_pass"].forEach((id) => { $(id).value = ""; });
+    renderIssued();
+    window.FF.toast(`Login created for @${u}`);
+    $("ad_result_card").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+  onShow.admin = renderAdmin;
+  window.FFAuth.isAdmin = isAdmin;
 
   /* ---------- Boot ---------- */
   async function init() {

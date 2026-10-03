@@ -111,8 +111,9 @@ $("toolGrid").innerHTML = CATS_ORDER.map(([c, label]) => {
 $("sideNav").innerHTML = `<a class="nav-link" href="#home" data-id="home"><span class="ico">${icon("home")}</span>Home</a>` +
   CATS_ORDER.map(([c, label]) => `<span class="nav-head">${label}</span>` + TOOLS.filter((t) => t.cat === c)
     .map((t) => `<a class="nav-link" href="#${t.id}" data-id="${t.id}" style="--tc:${t.color}"><span class="ico">${icon(t.id)}</span>${t.name}</a>`).join("")).join("") +
-  `<a class="nav-link nav-account" href="#account" data-id="account"><span class="ico">${icon("user")}</span>Account</a>`;
-const PAGES = { login: { name: "Log in", sub: "Sync your data across devices" }, account: { name: "Account", sub: "Profile and cloud sync" } };
+  `<a class="nav-link nav-account" href="#account" data-id="account"><span class="ico">${icon("user")}</span>Account</a>` +
+  `<a class="nav-link nav-admin" href="#admin" data-id="admin"><span class="ico">${icon("shield")}</span>Admin panel</a>`;
+const PAGES = { login: { name: "Log in", sub: "Sync your data across devices" }, account: { name: "Account", sub: "Profile and cloud sync" }, admin: { name: "Admin panel", sub: "Create logins for members" } };
 
 const onShow = {};
 /* Demo mode: tool pages are blurred and inert behind a "contact admin" card until someone logs in. */
@@ -137,6 +138,7 @@ function setLock(p, locked) {
 function route() {
   const id = (location.hash.slice(1) || "home");
   const page = $(id) && $(id).classList.contains("page") ? id : "home";
+  if (page === "admin" && !(window.FFAuth && window.FFAuth.isAdmin && window.FFAuth.isAdmin())) { location.replace("#account"); return; }
   const tool = TOOLS.find((t) => t.id === page) || PAGES[page];
   const locked = !(window.FFAuth && window.FFAuth.user);
   document.body.classList.toggle("locked", locked);
