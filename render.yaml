@@ -1,0 +1,17 @@
+# Render Blueprint: free web service for Zuzu (https://render.com/docs/blueprint-spec)
+services:
+  - type: web
+    name: zuzu
+    runtime: python
+    plan: free
+    branch: claude/modest-noether-aly5oe
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m assistant.voice_server
+    healthCheckPath: /api/config
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ASSISTANT_PASSWORD
+        sync: false
+      - key: ASSISTANT_TIMEZONE
+        value: Asia/Karachi

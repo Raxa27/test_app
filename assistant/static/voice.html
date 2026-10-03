@@ -1,0 +1,1153 @@
+<!doctype html>
+<html lang="ur">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#07080d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f5f6fb" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zuzu">
+<title>Zuzu</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Tokens ---------- */
+  :root {
+    color-scheme: dark;
+    --bg: #07080d;
+    --bg-glow: #151a3a;
+    --surface: #12141c;
+    --surface-2: #1a1d28;
+    --surface-3: #2a2f40;
+    --border: rgba(255, 255, 255, 0.09);
+    --border-strong: rgba(255, 255, 255, 0.18);
+    --text: #f3f4f8;
+    --text-2: #a9aec2;
+    --text-3: #8a8fa6;
+    --accent: #7c8cff;
+    --accent-2: #b57bff;
+    --accent-3: #2fd3c4;
+    --on-accent: #ffffff;
+    --user-bubble: linear-gradient(135deg, #5466f0, #8f50f0);
+    --success: #22c55e;
+    --on-success: #052e14;
+    --danger: #ff6b7a;
+    --scrim: rgba(3, 4, 8, 0.6);
+    --shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+    --radius-s: 12px;
+    --radius-m: 18px;
+    --radius-l: 26px;
+    --dur-fast: 150ms;
+    --dur: 240ms;
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-ur: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", serif;
+    --font-hi: "Noto Sans Devanagari", var(--font);
+    --orb-blend: screen;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      color-scheme: light;
+      --bg: #f5f6fb;
+      --bg-glow: #dfe3ff;
+      --surface: #ffffff;
+      --surface-2: #eef0f7;
+      --surface-3: #cfd3e0;
+      --border: rgba(15, 18, 40, 0.1);
+      --border-strong: rgba(15, 18, 40, 0.22);
+      --text: #12142a;
+      --text-2: #474c66;
+      --text-3: #5c6180;
+      --accent: #4f5ff0;
+      --accent-2: #8e4ff0;
+      --accent-3: #0f9e92;
+      --success: #15803d;
+      --on-success: #ffffff;
+      --danger: #c8253c;
+      --scrim: rgba(20, 22, 40, 0.35);
+      --shadow: 0 8px 28px rgba(20, 24, 60, 0.1);
+      --orb-blend: normal;
+    }
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f5f6fb;
+    --bg-glow: #dfe3ff;
+    --surface: #ffffff;
+    --surface-2: #eef0f7;
+    --surface-3: #cfd3e0;
+    --border: rgba(15, 18, 40, 0.1);
+    --border-strong: rgba(15, 18, 40, 0.22);
+    --text: #12142a;
+    --text-2: #474c66;
+    --text-3: #5c6180;
+    --accent: #4f5ff0;
+    --accent-2: #8e4ff0;
+    --accent-3: #0f9e92;
+    --success: #15803d;
+    --on-success: #ffffff;
+    --danger: #c8253c;
+    --scrim: rgba(20, 22, 40, 0.35);
+    --shadow: 0 8px 28px rgba(20, 24, 60, 0.1);
+    --orb-blend: normal;
+  }
+
+  /* ---------- Base ---------- */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  html { overflow-x: clip; }
+  body {
+    background: var(--bg);
+    background-image: radial-gradient(120% 60% at 50% -10%, var(--bg-glow) 0%, transparent 60%);
+    background-attachment: fixed;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
+  }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; border: none; background: none; padding: 0; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 10px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  svg.i { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  [lang="ur"] { font-family: var(--font-ur); line-height: 2.1; }
+  [lang="hi"] { font-family: var(--font-hi); }
+
+  .app {
+    height: 100dvh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar { display: flex; align-items: center; gap: 8px; padding: 10px 12px 10px 16px; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-inline-end: auto; min-width: 0; }
+  .brand-mark {
+    width: 32px; height: 32px; border-radius: 50%; flex: none;
+    background: conic-gradient(from 200deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
+    box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  .brand-name { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .conn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-3); }
+  .conn::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+  .conn[data-online="false"]::before { background: var(--danger); }
+  .icon-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: grid; place-items: center;
+    color: var(--text-2);
+    transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  }
+  .icon-btn:hover { background: var(--surface-2); color: var(--text); }
+  .icon-btn:active { transform: scale(0.92); }
+  .pill-toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    min-height: 40px; padding: 0 14px; border-radius: 999px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text-2); font-size: 14px; font-weight: 500; white-space: nowrap;
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  }
+  .pill-toggle svg.i { width: 16px; height: 16px; }
+  .pill-toggle[aria-pressed="true"] {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: var(--on-accent); border-color: transparent;
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+
+  /* ---------- Stage ---------- */
+  .stage { position: relative; min-height: 0; overflow: hidden; }
+  .hero {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 22px; padding: 16px 20px;
+    text-align: center; overflow-y: auto;
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease), visibility var(--dur);
+  }
+  .app[data-chat="true"] .hero { opacity: 0; transform: translateY(-12px) scale(0.98); pointer-events: none; visibility: hidden; }
+  .greet h1 { margin: 0; font-size: clamp(26px, 7vw, 34px); font-weight: 700; letter-spacing: -0.025em; line-height: 1.2; }
+  .greet p { margin: 6px 0 0; color: var(--text-2); font-size: 16px; }
+
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 520px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    min-height: 44px; padding: 8px 14px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); font-size: 15px; text-align: start;
+    transition: transform var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+  }
+  .chip svg.i { width: 18px; height: 18px; color: var(--accent); }
+  .chip:hover { border-color: var(--border-strong); }
+  .chip:active { transform: scale(0.96); }
+
+  /* ---------- Orb ---------- */
+  .orb {
+    position: relative; width: 168px; height: 168px; border-radius: 50%; flex: none;
+    display: grid; place-items: center;
+    transition: transform var(--dur) var(--ease);
+  }
+  .orb:active { transform: scale(0.95); }
+  .orb .blob { position: absolute; inset: 0; border-radius: 50%; filter: blur(16px); opacity: 0.9; }
+  .orb .b1 { background: radial-gradient(circle at 35% 35%, var(--accent), transparent 62%); animation: d1 7s ease-in-out infinite; }
+  .orb .b2 { background: radial-gradient(circle at 66% 42%, var(--accent-2), transparent 62%); animation: d2 8s ease-in-out infinite; mix-blend-mode: var(--orb-blend); }
+  .orb .b3 { background: radial-gradient(circle at 50% 72%, var(--accent-3), transparent 62%); animation: d3 9s ease-in-out infinite; mix-blend-mode: var(--orb-blend); }
+  .orb .core {
+    position: absolute; inset: 24%; border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, rgba(255,255,255,0.75), rgba(255,255,255,0.08) 62%);
+    box-shadow: inset 0 0 18px rgba(255,255,255,0.25), 0 0 36px color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  .orb svg.i { position: relative; width: 34px; height: 34px; color: #fff; filter: drop-shadow(0 1px 4px rgba(0,0,0,0.35)); }
+  @keyframes d1 { 50% { transform: translate(7%, 5%) scale(1.07); } }
+  @keyframes d2 { 50% { transform: translate(-7%, 4%) scale(0.94); } }
+  @keyframes d3 { 50% { transform: translate(3%, -7%) scale(1.06); } }
+  @keyframes breathe { 50% { transform: scale(1.1); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  [data-state="listening"] .orb .blob { animation-duration: 1.4s, 1.6s, 1.8s; }
+  [data-state="listening"] .orb .core { animation: breathe 0.9s ease-in-out infinite; }
+  [data-state="thinking"] .orb .blob { animation: spin 2s linear infinite; }
+  [data-state="speaking"] .orb .core { animation: breathe 0.45s ease-in-out infinite; }
+  .status { min-height: 24px; color: var(--text-2); font-size: 15px; unicode-bidi: plaintext; }
+
+  /* ---------- Chat log ---------- */
+  .log {
+    position: absolute; inset: 0;
+    overflow-y: auto; overscroll-behavior: contain;
+    padding: 8px 16px 24px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .app:not([data-chat="true"]) .log { visibility: hidden; }
+  .row { display: flex; animation: rise var(--dur) var(--ease) both; }
+  .row.user { justify-content: flex-end; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+  .bubble {
+    max-width: min(84%, 520px);
+    padding: 10px 14px; border-radius: var(--radius-m);
+    font-size: 16px; overflow-wrap: anywhere; unicode-bidi: plaintext; white-space: pre-wrap;
+  }
+  .row.user .bubble { background: var(--user-bubble); color: #fff; border-end-end-radius: 6px; }
+  .row.bot .bubble { background: var(--surface); border: 1px solid var(--border); border-end-start-radius: 6px; }
+  .row.note .bubble { margin: 0 auto; background: transparent; color: var(--text-3); font-size: 14px; text-align: center; padding: 2px 8px; }
+  .row.error .bubble { margin: 0 auto; background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); font-size: 14px; border-radius: var(--radius-s); display: flex; gap: 8px; align-items: center; }
+  .row.error svg.i { width: 18px; height: 18px; }
+  .typing { display: inline-flex; gap: 5px; padding: 15px 16px; }
+  .typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); animation: blink 1.2s infinite; }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes blink { 0%, 60%, 100% { opacity: 0.25; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+
+  /* Action chips & confirm card */
+  .action {
+    display: inline-flex; align-items: center; gap: 10px; max-width: 100%;
+    min-height: 48px; padding: 8px 14px 8px 8px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); text-decoration: none; font-weight: 500;
+    transition: transform var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+  }
+  .action:hover { border-color: var(--border-strong); }
+  .action:active { transform: scale(0.97); }
+  .action .label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .action .sub { color: var(--text-3); font-size: 13px; font-weight: 400; }
+  .action .ext { width: 16px; height: 16px; color: var(--text-3); }
+  .ico { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: #fff; flex: none; }
+  .ico svg.i { width: 17px; height: 17px; }
+  .ico.youtube { background: #d91f14; }
+  .ico.whatsapp { background: #158f47; }
+  .ico.call { background: #1f8a4c; }
+  .ico.sms { background: #2f6fe0; }
+  .ico.maps { background: #c76f00; }
+  .ico.web { background: #4f5ff0; }
+
+  .confirm {
+    width: 100%;
+    border-radius: var(--radius-l);
+    background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    box-shadow: var(--shadow), 0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent);
+    padding: 16px;
+    display: grid; gap: 14px;
+  }
+  .confirm-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .confirm-head .ico { width: 46px; height: 46px; }
+  .confirm-head .ico svg.i { width: 22px; height: 22px; }
+  .confirm-title { font-weight: 600; font-size: 17px; overflow-wrap: anywhere; }
+  .confirm-sub { color: var(--text-2); font-size: 14px; }
+  .confirm-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn {
+    min-height: 50px; padding: 0 16px; border-radius: 14px; font-weight: 600; font-size: 16px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: transform var(--dur-fast) var(--ease), filter var(--dur-fast) var(--ease);
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn svg.i { width: 20px; height: 20px; }
+  .btn-yes { background: var(--success); color: var(--on-success); }
+  .btn-yes:hover, .btn-primary:hover { filter: brightness(1.08); }
+  .btn-no, .btn-ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--on-accent); }
+
+  /* ---------- Dock ---------- */
+  .dock { position: relative; padding: 8px 16px calc(12px + env(safe-area-inset-bottom)); }
+  .live {
+    position: absolute; left: 16px; right: 16px; bottom: 100%;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-radius: var(--radius-m);
+    background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow);
+    opacity: 0; transform: translateY(8px); pointer-events: none;
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+  .live.show { opacity: 1; transform: none; }
+  .live-text { flex: 1; min-width: 0; font-size: 16px; unicode-bidi: plaintext; overflow-wrap: anywhere; }
+  .live-text:empty::before { content: attr(data-placeholder); color: var(--text-3); }
+  .wave { display: flex; align-items: center; gap: 3px; height: 22px; flex: none; }
+  .wave span { width: 3px; height: 30%; border-radius: 3px; background: linear-gradient(var(--accent), var(--accent-2)); animation: wave 0.9s ease-in-out infinite; }
+  .wave span:nth-child(2) { animation-delay: 0.1s; } .wave span:nth-child(3) { animation-delay: 0.2s; }
+  .wave span:nth-child(4) { animation-delay: 0.3s; } .wave span:nth-child(5) { animation-delay: 0.4s; }
+  @keyframes wave { 50% { height: 100%; } }
+
+  .composer { display: flex; align-items: center; gap: 10px; }
+  .field {
+    flex: 1; min-width: 0;
+    display: flex; align-items: center;
+    min-height: 56px; padding: 4px 6px 4px 18px;
+    border-radius: 999px; background: var(--surface); border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    transition: border-color var(--dur-fast) var(--ease);
+  }
+  .field:focus-within { border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+  .field input { flex: 1; min-width: 0; height: 44px; border: none; background: transparent; outline: none; font-size: 16px; unicode-bidi: plaintext; }
+  .field input::placeholder { color: var(--text-3); }
+  .send {
+    width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; flex: none;
+    color: var(--on-accent); background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    transition: transform var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease);
+  }
+  .send:disabled { opacity: 0; transform: scale(0.6); pointer-events: none; }
+  .send svg.i { width: 20px; height: 20px; }
+  .mic {
+    position: relative; width: 60px; height: 60px; border-radius: 50%; flex: none;
+    display: grid; place-items: center; color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 45%, transparent);
+    transition: transform var(--dur-fast) var(--ease);
+  }
+  .mic:active { transform: scale(0.93); }
+  .mic svg.i { width: 26px; height: 26px; }
+  .mic::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--accent); opacity: 0; }
+  [data-state="listening"] .mic::after { animation: ring 1.2s ease-out infinite; }
+  @keyframes ring { from { opacity: 0.8; transform: scale(0.9); } to { opacity: 0; transform: scale(1.35); } }
+  .mic .stop { display: none; }
+  .app:not([data-state="idle"]) .mic .mic-ico { display: none; }
+  .app:not([data-state="idle"]) .mic .stop { display: block; }
+  .app:not([data-chat="true"]) .mic { display: none; }
+  .hint { margin: 8px 0 0; text-align: center; color: var(--text-3); font-size: 13px; }
+  .hint:empty { display: none; }
+
+  /* ---------- Sheet ---------- */
+  dialog.sheet {
+    margin: auto auto 0; width: 100%; max-width: 560px; max-height: 88dvh;
+    padding: 0; border: none; border-radius: 26px 26px 0 0;
+    background: var(--surface); color: var(--text); box-shadow: var(--shadow);
+  }
+  dialog.sheet[open] { animation: up var(--dur) var(--ease); }
+  dialog.sheet::backdrop { background: var(--scrim); backdrop-filter: blur(3px); }
+  @keyframes up { from { transform: translateY(40px); opacity: 0; } }
+  @media (min-width: 640px) { dialog.sheet { margin: auto; border-radius: 26px; } }
+  .sheet-inner { padding: 8px 20px calc(20px + env(safe-area-inset-bottom)); overflow-y: auto; max-height: 88dvh; }
+  .grabber { width: 40px; height: 5px; border-radius: 3px; background: var(--border-strong); margin: 4px auto 8px; }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .sheet-head h2 { margin: 0; font-size: 20px; letter-spacing: -0.01em; }
+  .group { padding: 14px 0; border-top: 1px solid var(--border); }
+  .group-label { font-size: 13px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; padding: 4px; border-radius: 14px; background: var(--surface-2); }
+  .seg button { min-height: 44px; border-radius: 10px; color: var(--text-2); font-weight: 500; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
+  .seg button[aria-checked="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.18); }
+  .seg button[lang="ur"] { line-height: 1.6; }
+  .setting { display: flex; align-items: center; gap: 14px; min-height: 56px; }
+  .setting-text { flex: 1; min-width: 0; }
+  .setting-title { font-weight: 500; }
+  .setting-desc { color: var(--text-2); font-size: 14px; }
+  .switch { position: relative; width: 52px; height: 32px; border-radius: 999px; background: var(--surface-3); flex: none; transition: background var(--dur) var(--ease); }
+  .switch::before { content: ""; position: absolute; inset: -8px -4px; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform var(--dur) var(--ease); }
+  .switch[aria-checked="true"] { background: var(--success); }
+  .switch[aria-checked="true"]::after { transform: translateX(20px); }
+  .range-row { display: grid; gap: 2px; padding-top: 6px; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); min-height: 44px; margin: 0; }
+  .sheet-actions { display: grid; gap: 10px; }
+
+  /* ---------- Login ---------- */
+  .login {
+    position: fixed; inset: 0; z-index: 10;
+    display: grid; place-items: center; padding: 24px 16px;
+    background: var(--bg);
+    background-image: radial-gradient(120% 60% at 50% -10%, var(--bg-glow) 0%, transparent 60%);
+  }
+  .login[hidden] { display: none; }
+  .login-card { width: 100%; max-width: 380px; display: grid; gap: 18px; text-align: center; }
+  .login-card .orb { width: 112px; height: 112px; margin: 0 auto; pointer-events: none; }
+  .login-card h1 { margin: 0; font-size: 30px; letter-spacing: -0.02em; }
+  .login-card p { margin: 4px 0 0; color: var(--text-2); }
+  .login-card form { display: grid; gap: 10px; text-align: start; }
+  .login-card label { font-size: 14px; font-weight: 500; color: var(--text-2); }
+  .login-card input { min-height: 52px; padding: 0 16px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); outline: none; }
+  .login-card input:focus { border-color: var(--accent); }
+  .login-card input[aria-invalid="true"] { border-color: var(--danger); }
+  .field-error { color: var(--danger); font-size: 14px; min-height: 20px; }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed; left: 50%; top: calc(12px + env(safe-area-inset-top)); z-index: 20;
+    transform: translate(-50%, -20px); opacity: 0;
+    display: flex; align-items: center; gap: 10px;
+    width: max-content; max-width: calc(100% - 32px); padding: 12px 16px; border-radius: 16px;
+    background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow);
+    font-weight: 500; pointer-events: none;
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast svg.i { color: var(--accent); }
+
+  @media (max-height: 680px) {
+    .orb { width: 128px; height: 128px; }
+    .hero { gap: 14px; justify-content: flex-start; padding-top: 8px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h10"/><path d="M18 7h2"/><circle cx="16" cy="7" r="2"/><path d="M4 17h2"/><path d="M10 17h10"/><circle cx="8" cy="17" r="2"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-ear" viewBox="0 0 24 24"><path d="M6 8.5a6.5 6.5 0 1 1 13 0c0 6-6 6-6 10a3.5 3.5 0 1 1-7 0"/><path d="M15 8.5a2.5 2.5 0 0 0-5 0v1a2 2 0 1 1 0 4"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></symbol>
+    <symbol id="i-sms" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M8 16H3v5"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  </defs>
+</svg>
+
+<div class="app" id="app" data-state="idle" data-chat="false">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Zuzu</span>
+      <span class="conn" id="conn" data-online="true">Online</span>
+    </div>
+    <button class="pill-toggle" id="heyToggle" aria-pressed="false" type="button">
+      <svg class="i" aria-hidden="true"><use href="#i-ear"/></svg><span>Hey Zuzu</span>
+    </button>
+    <button class="icon-btn" id="settingsBtn" type="button" aria-label="Settings" aria-haspopup="dialog">
+      <svg class="i" aria-hidden="true"><use href="#i-settings"/></svg>
+    </button>
+  </header>
+
+  <main class="stage">
+    <section class="hero" id="hero">
+      <div class="greet">
+        <h1 id="greeting">Assalam o Alaikum</h1>
+        <p>Main Zuzu hoon. Bataiye, kya kaam karun?</p>
+      </div>
+      <button class="orb" id="orb" type="button" aria-label="Bolne ke liye dabayein">
+        <span class="blob b1" aria-hidden="true"></span><span class="blob b2" aria-hidden="true"></span><span class="blob b3" aria-hidden="true"></span>
+        <span class="core" aria-hidden="true"></span>
+        <svg class="i" aria-hidden="true"><use href="#i-mic"/></svg>
+      </button>
+      <div class="status" id="status" role="status">Orb dabayein aur bolein</div>
+      <div class="chips" id="chips"></div>
+    </section>
+    <section class="log" id="log" aria-live="polite" aria-label="Baat cheet"></section>
+  </main>
+
+  <footer class="dock">
+    <div class="live" id="live" aria-hidden="true">
+      <div class="wave"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="live-text" id="liveText" data-placeholder="Sun raha hoon…"></div>
+    </div>
+    <form class="composer" id="composer">
+      <label class="field">
+        <span class="sr-only">Message</span>
+        <input id="input" type="text" placeholder="Zuzu se kuch bhi poochein…" autocomplete="off" enterkeyhint="send">
+        <button class="send" id="send" type="submit" aria-label="Bhejein" disabled>
+          <svg class="i" aria-hidden="true"><use href="#i-send"/></svg>
+        </button>
+      </label>
+      <button class="mic" id="mic" type="button" aria-label="Bolne ke liye dabayein">
+        <svg class="i mic-ico" aria-hidden="true"><use href="#i-mic"/></svg>
+        <svg class="i stop" aria-hidden="true"><use href="#i-stop"/></svg>
+      </button>
+    </form>
+    <p class="hint" id="hint"></p>
+  </footer>
+</div>
+
+<dialog class="sheet" id="settings" aria-labelledby="settingsTitle">
+  <div class="sheet-inner">
+    <div class="grabber" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="settingsTitle">Settings</h2>
+      <button class="icon-btn" type="button" data-close aria-label="Band karein"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </div>
+
+    <div class="group">
+      <div class="group-label" id="langLabel">Zabaan</div>
+      <div class="seg" role="radiogroup" aria-labelledby="langLabel" id="langSeg">
+        <button type="button" role="radio" data-value="ur-PK" lang="ur">اردو</button>
+        <button type="button" role="radio" data-value="hi-IN" lang="hi">हिन्दी</button>
+        <button type="button" role="radio" data-value="en-US">English</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-label">Awaaz</div>
+      <div class="setting">
+        <div class="setting-text">
+          <div class="setting-title" id="heyLabel">Hey Zuzu mode</div>
+          <div class="setting-desc">"Zuzu" bol kar baghair dabaye kaam batayein</div>
+        </div>
+        <button class="switch" type="button" role="switch" id="heySwitch" aria-checked="false" aria-labelledby="heyLabel"></button>
+      </div>
+      <div class="setting">
+        <div class="setting-text">
+          <div class="setting-title" id="speakLabel">Jawab bol kar sunayein</div>
+          <div class="setting-desc">Band karein to jawab sirf likha aayega</div>
+        </div>
+        <button class="switch" type="button" role="switch" id="speakSwitch" aria-checked="true" aria-labelledby="speakLabel"></button>
+      </div>
+      <div class="range-row">
+        <label class="setting-title" for="rate">Bolne ki raftaar <span id="rateVal" class="setting-desc"></span></label>
+        <input type="range" id="rate" min="0.7" max="1.4" step="0.1" value="1">
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-label" id="themeLabel">Theme</div>
+      <div class="seg" role="radiogroup" aria-labelledby="themeLabel" id="themeSeg">
+        <button type="button" role="radio" data-value="system">Auto</button>
+        <button type="button" role="radio" data-value="dark">Dark</button>
+        <button type="button" role="radio" data-value="light">Light</button>
+      </div>
+    </div>
+
+    <div class="group sheet-actions">
+      <button class="btn btn-ghost" type="button" id="resetBtn"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg>Nai baat shuru karein</button>
+      <button class="btn btn-ghost" type="button" id="logoutBtn" hidden><svg class="i" aria-hidden="true"><use href="#i-lock"/></svg>Log out</button>
+    </div>
+  </div>
+</dialog>
+
+<div class="login" id="login" hidden>
+  <div class="login-card">
+    <div class="orb" aria-hidden="true">
+      <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><span class="core"></span>
+    </div>
+    <div>
+      <h1>Zuzu</h1>
+      <p>Aap ka apna voice assistant</p>
+    </div>
+    <form id="loginForm" novalidate>
+      <input type="text" name="username" value="zuzu" autocomplete="username" hidden>
+      <label for="pw">Password</label>
+      <input id="pw" type="password" autocomplete="current-password" required aria-describedby="pwError">
+      <div class="field-error" id="pwError" role="alert"></div>
+      <button class="btn btn-primary" type="submit">Andar jayein</button>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><svg class="i" aria-hidden="true"><use href="#i-bell"/></svg><span id="toastText"></span></div>
+
+<script>
+(() => {
+  const APP_NAME = "Zuzu";
+  const $ = (id) => document.getElementById(id);
+  const app = $("app");
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+    del(k) { try { localStorage.removeItem(k); } catch {} },
+  };
+
+  // Longer phrases first so "suno zuzu" wins over "zuzu". Includes common mis-hearings.
+  const WAKE_WORDS = [
+    "suno zuzu", "hey zuzu", "hi zuzu", "ok zuzu",
+    "zuzu", "zu zu", "zoozoo", "zoo zoo", "juju", "ju ju",
+    "سنو زوزو", "زوزو", "زو زو", "सुनो ज़ूज़ू", "ज़ूज़ू", "जूजू", "ज़ुज़ु", "जुजु",
+  ];
+  const YES = ["haan", "han", "haa", "ha", "ji", "jee", "yes", "yeah", "ok", "okay", "theek", "thik", "kar do", "karo", "bhej do", "ملا", "ہاں", "جی", "ٹھیک", "کرو", "हाँ", "हां", "जी", "ठीक", "करो"];
+  const NO = ["nahi", "nahin", "nai", "no", "mat", "cancel", "ruko", "rehne do", "نہیں", "مت", "رہنے", "नहीं", "मत", "रहने"];
+  const SUGGESTIONS = [
+    { icon: "play", text: "Atif Aslam ka gana lagao" },
+    { icon: "sun", text: "Aaj Lahore ka mausam kaisa hai?" },
+    { icon: "wallet", text: "Is mahine kitna kharcha hua?" },
+    { icon: "bell", text: "Kal subah 9 baje meeting yaad dilana" },
+    { icon: "chat", text: "Ammi ko WhatsApp karo ke main raste mein hoon" },
+  ];
+  const ACTION_STYLE = {
+    whatsapp: { icon: "chat", cls: "whatsapp", verb: "WhatsApp kholun?" },
+    call: { icon: "phone", cls: "call", verb: "Call milaun?" },
+    sms: { icon: "sms", cls: "sms", verb: "SMS bhejun?" },
+  };
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const synth = window.speechSynthesis;
+
+  const settings = {
+    lang: store.get("lang") || "ur-PK",
+    speak: store.get("speak") !== "0",
+    rate: parseFloat(store.get("rate") || "1"),
+    theme: store.get("theme") || "system",
+  };
+  let password = store.get("password") || "";
+  let passwordRequired = false;
+  let handsFree = false;
+  let busy = false;
+  let recognition = null;
+  let listening = false;
+  let awaitingCommand = false;
+  let pendingConfirm = null;
+
+  // ---------- Helpers ----------
+  function icon(name, cls = "i") {
+    return `<svg class="${cls}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+  }
+  function scriptOf(text) {
+    if (/[؀-ۿ]/.test(text)) return "ur";
+    if (/[ऀ-ॿ]/.test(text)) return "hi";
+    return null;
+  }
+  function setState(state, status) {
+    app.dataset.state = state;
+    if (status !== undefined) $("status").textContent = status;
+    const live = state === "listening" && (!handsFree || awaitingCommand || !!pendingConfirm);
+    $("live").classList.toggle("show", live && app.dataset.chat === "true");
+    if (!live) $("liveText").textContent = "";
+  }
+  function scrollDown() {
+    const log = $("log");
+    requestAnimationFrame(() => log.scrollTo({ top: log.scrollHeight, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
+  }
+  function addRow(kind, content) {
+    app.dataset.chat = "true";
+    const row = document.createElement("div");
+    row.className = "row " + kind;
+    if (typeof content === "string") {
+      const b = document.createElement("div");
+      b.className = "bubble";
+      b.textContent = content;
+      const s = scriptOf(content);
+      if (s) b.lang = s;
+      row.appendChild(b);
+    } else {
+      row.appendChild(content);
+    }
+    $("log").appendChild(row);
+    scrollDown();
+    return row;
+  }
+  function addError(text) {
+    const b = document.createElement("div");
+    b.className = "bubble";
+    b.innerHTML = icon("alert");
+    b.append(text);
+    addRow("error", b);
+  }
+  let toastTimer;
+  function toast(text) {
+    $("toastText").textContent = text;
+    $("toast").classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => $("toast").classList.remove("show"), 3500);
+  }
+  function haptic() { try { navigator.vibrate && navigator.vibrate(12); } catch {} }
+  function idleStatus() {
+    if (pendingConfirm) return "Haan ya Nahi?";
+    return handsFree ? `"${APP_NAME}" bol kar kaam batayein` : "Orb dabayein aur bolein";
+  }
+  function setOnline(on) {
+    $("conn").dataset.online = String(on);
+    $("conn").textContent = on ? "Online" : "Offline";
+  }
+
+  // ---------- API ----------
+  class AuthError extends Error {}
+  async function api(path, body) {
+    let res;
+    try {
+      res = await fetch(path, {
+        method: body === undefined ? "GET" : "POST",
+        headers: { "Content-Type": "application/json", "X-Assistant-Password": password },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+    } catch {
+      setOnline(false);
+      throw new Error("Internet ya server se rabta nahi ho saka.");
+    }
+    setOnline(true);
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401) { showLogin(password ? "Password ghalat hai." : ""); throw new AuthError("Password chahiye."); }
+    if (!res.ok) throw new Error(data.error || "Kuch ghalat ho gaya. Dobara koshish karein.");
+    return data;
+  }
+
+  // ---------- Login ----------
+  function showLogin(error = "") {
+    $("login").hidden = false;
+    $("pwError").textContent = error;
+    $("pw").setAttribute("aria-invalid", error ? "true" : "false");
+    setTimeout(() => $("pw").focus(), 50);
+  }
+  $("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const value = $("pw").value;
+    if (!value) { $("pwError").textContent = "Password likhein."; $("pw").setAttribute("aria-invalid", "true"); return; }
+    password = value;
+    try {
+      await api("/api/reminders");
+      store.set("password", password);
+      $("login").hidden = true;
+      $("pw").value = "";
+    } catch (err) {
+      if (!(err instanceof AuthError)) $("pwError").textContent = err.message;
+    }
+  });
+  $("logoutBtn").addEventListener("click", () => {
+    password = "";
+    store.del("password");
+    $("settings").close();
+    showLogin();
+  });
+
+  // ---------- Speaking ----------
+  function pickVoice(code) {
+    const voices = synth ? synth.getVoices() : [];
+    const base = code.split("-")[0];
+    return voices.find(v => v.lang === code) || voices.find(v => v.lang.replace("_", "-").startsWith(base))
+      || (base === "ur" ? voices.find(v => v.lang.startsWith("hi")) : null) || null;
+  }
+  // Picks what to say and with which voice. Urdu replies come with a Devanagari copy (`speech`):
+  // phones without an Urdu voice speak that copy with a Hindi voice, which sounds the same spoken.
+  function chooseSpeech(text, speech) {
+    const voices = synth ? synth.getVoices() : [];
+    const find = (prefix) => voices.find(v => v.lang.replace("_", "-").toLowerCase().startsWith(prefix));
+    if (scriptOf(text) === "ur") {
+      const ur = find("ur");
+      if (ur) return { say: text, voice: ur, lang: ur.lang };
+      const hi = find("hi");
+      if (speech) return { say: speech, voice: hi || null, lang: hi ? hi.lang : "hi-IN" };
+      return { say: text, voice: hi || null, lang: "ur-PK" };
+    }
+    const code = scriptOf(text) === "hi" ? "hi-IN" : settings.lang;
+    const v = pickVoice(code);
+    return { say: text, voice: v, lang: v ? v.lang : code };
+  }
+  function speak(text, speech = null) {
+    return new Promise((resolve) => {
+      if (!synth || !settings.speak) return resolve();
+      synth.cancel();
+      const choice = chooseSpeech(text, speech);
+      const u = new SpeechSynthesisUtterance(choice.say);
+      if (choice.voice) u.voice = choice.voice;
+      u.lang = choice.lang;
+      u.rate = settings.rate;
+      u.onend = u.onerror = () => resolve();
+      setState("speaking", "Bol raha hoon…");
+      synth.speak(u);
+    });
+  }
+  if (synth) synth.onvoiceschanged = () => synth.getVoices();
+
+  // ---------- Device actions ----------
+  function classify(text) {
+    const words = " " + text.toLowerCase().replace(/[.,!?،۔]/g, " ") + " ";
+    const has = (list) => list.some(w => words.includes(" " + w + " ") || (!/^[a-z ]+$/.test(w) && words.includes(w)));
+    if (has(NO)) return false;
+    if (has(YES)) return true;
+    return null;
+  }
+  function styleFor(action) {
+    if (ACTION_STYLE[action.type]) return ACTION_STYLE[action.type];
+    if (action.url.includes("youtube.com")) return { icon: "play", cls: "youtube" };
+    if (action.url.includes("google.com/maps")) return { icon: "map", cls: "maps" };
+    return { icon: "link", cls: "web" };
+  }
+  function splitLabel(label) {
+    const i = label.indexOf(": ");
+    return i === -1 ? [label, ""] : [label.slice(0, i), label.slice(i + 2)];
+  }
+  function actionChip(action) {
+    const st = styleFor(action);
+    const [kind, target] = splitLabel(action.label);
+    const a = document.createElement("a");
+    a.className = "action";
+    a.href = action.url;
+    if (!/^(tel|sms):/.test(action.url)) { a.target = "_blank"; a.rel = "noopener"; }
+    a.innerHTML = `<span class="ico ${st.cls}">${icon(st.icon)}</span><span class="label"></span>${icon("link", "i ext")}`;
+    const label = a.querySelector(".label");
+    label.textContent = target || kind;
+    if (target) {
+      const sub = document.createElement("span");
+      sub.className = "sub";
+      sub.textContent = " · " + kind;
+      label.appendChild(sub);
+    }
+    return a;
+  }
+  function openUrl(url) {
+    if (/^(tel|sms):/.test(url)) { location.href = url; return true; }
+    const w = window.open(url, "_blank");
+    if (w) w.opener = null;
+    return !!w;
+  }
+  function addAction(action) {
+    if (!action.confirm || pendingConfirm) {
+      addRow("bot", actionChip(action));
+      if (!action.confirm && !openUrl(action.url)) toast("Kholne ke liye button dabayein");
+      return;
+    }
+    const st = styleFor(action);
+    const [kind, target] = splitLabel(action.label);
+    const card = document.createElement("div");
+    card.className = "confirm";
+    card.setAttribute("role", "group");
+    card.setAttribute("aria-label", action.label);
+    card.innerHTML = `
+      <div class="confirm-head">
+        <span class="ico ${st.cls}">${icon(st.icon)}</span>
+        <div><div class="confirm-title"></div><div class="confirm-sub"></div></div>
+      </div>
+      <div class="confirm-btns">
+        <button type="button" class="btn btn-no">${icon("x")}Nahi</button>
+        <button type="button" class="btn btn-yes">${icon("check")}Haan</button>
+      </div>`;
+    card.querySelector(".confirm-title").textContent = target || kind;
+    card.querySelector(".confirm-sub").textContent = (st.verb || kind) + " · \"haan\" ya \"nahi\" bolein";
+    card.querySelector(".btn-yes").onclick = () => resolveConfirm(true);
+    card.querySelector(".btn-no").onclick = () => resolveConfirm(false);
+    const row = addRow("bot", card);
+    pendingConfirm = { action, row };
+  }
+  function resolveConfirm(yes) {
+    if (!pendingConfirm) return;
+    const { action, row } = pendingConfirm;
+    pendingConfirm = null;
+    haptic();
+    if (!yes) {
+      row.remove();
+      addRow("note", action.label + " — cancel");
+      setState("idle", idleStatus());
+      return;
+    }
+    row.replaceChildren(actionChip(action));
+    const opened = openUrl(action.url);
+    setState("idle", opened ? "✓ " + action.label : "Kholne ke liye button dabayein");
+    if (!opened) toast("Kholne ke liye button dabayein");
+  }
+
+  // ---------- Location ----------
+  // Asked once (the browser shows "Allow location"); refreshed at most every 5 minutes.
+  let lastLocation = null;
+  let locationDenied = false;
+  function getLocation() {
+    if (locationDenied || !("geolocation" in navigator)) return Promise.resolve(null);
+    if (lastLocation && Date.now() - lastLocation.at < 5 * 60 * 1000) return Promise.resolve(lastLocation.coords);
+    return new Promise((resolve) => {
+      const done = (value) => { clearTimeout(timer); resolve(value); };
+      // Don't hold up the question if the GPS is slow; use the last known position instead.
+      const timer = setTimeout(() => resolve(lastLocation ? lastLocation.coords : null), 5000);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          lastLocation = { at: Date.now(), coords: { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: Math.round(pos.coords.accuracy) } };
+          done(lastLocation.coords);
+        },
+        (err) => {
+          if (err.code === err.PERMISSION_DENIED) locationDenied = true;
+          done(lastLocation ? lastLocation.coords : null);
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 5 * 60 * 1000 },
+      );
+    });
+  }
+
+  // ---------- Asking ----------
+  async function ask(text, byVoice = false) {
+    text = text.trim();
+    if (!text || busy) return;
+    if (pendingConfirm) resolveConfirm(false);
+    busy = true;
+    stopListening();
+    if (synth) synth.cancel();
+    addRow("user", text);
+    const typing = document.createElement("div");
+    typing.className = "bubble typing";
+    typing.setAttribute("role", "img");
+    typing.setAttribute("aria-label", "Soch raha hoon");
+    typing.innerHTML = "<span></span><span></span><span></span>";
+    const typingRow = addRow("bot", typing);
+    setState("thinking", "Soch raha hoon…");
+    try {
+      const location = await getLocation();
+      const { reply, speech = null, actions = [] } = await api("/api/ask", { text, location });
+      typingRow.remove();
+      addRow("bot", reply);
+      for (const a of actions) addAction(a);
+      await speak(reply, speech);
+    } catch (e) {
+      typingRow.remove();
+      if (!(e instanceof AuthError)) addError(e.message);
+    } finally {
+      busy = false;
+      setState("idle", idleStatus());
+      // Listen for a spoken "haan/nahi" only when the user is talking, not typing.
+      if (handsFree || (pendingConfirm && byVoice)) startListening();
+    }
+  }
+
+  // ---------- Listening ----------
+  function findWake(text) {
+    const lower = text.toLowerCase();
+    for (const w of WAKE_WORDS) {
+      const i = lower.indexOf(w);
+      if (i !== -1) return lower.slice(i + w.length).replace(/^[\s,.،!?]+/, "");
+    }
+    return null;
+  }
+  function handleConfirmSpeech(said) {
+    const answer = classify(said);
+    if (answer === null) { setState("idle", "Haan ya Nahi dabayein"); return; }
+    resolveConfirm(answer);
+  }
+  function startListening() {
+    if (!SR || listening || busy) return;
+    recognition = new SR();
+    recognition.lang = settings.lang;
+    recognition.interimResults = true;
+    recognition.continuous = handsFree;
+    let finalText = "";
+
+    recognition.onstart = () => {
+      listening = true;
+      if (pendingConfirm) setState("listening", "Haan ya Nahi?");
+      else if (!handsFree || awaitingCommand) setState("listening", "Sun raha hoon…");
+    };
+    recognition.onresult = (event) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const r = event.results[i];
+        if (!r.isFinal) { interim += r[0].transcript; continue; }
+        const said = r[0].transcript.trim();
+        if (pendingConfirm) { handleConfirmSpeech(said); return; }
+        if (!handsFree) { finalText += " " + said; continue; }
+        if (awaitingCommand) { awaitingCommand = false; ask(said, true); return; }
+        const rest = findWake(said);
+        if (rest === null) continue;
+        haptic();
+        if (rest) { ask(rest, true); return; }
+        awaitingCommand = true;
+        setState("listening", "Ji, bataiye…");
+      }
+      if (!handsFree || awaitingCommand || pendingConfirm) {
+        const t = (finalText + " " + interim).trim();
+        $("liveText").textContent = t;
+        if (app.dataset.chat !== "true") $("status").textContent = t || "Sun raha hoon…";
+      }
+    };
+    recognition.onerror = (e) => {
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+        if (handsFree) setHandsFree(false);
+        addError("Mic ki ijazat nahi mili. Browser settings mein microphone allow karein.");
+      } else if (e.error === "network") {
+        addError("Awaaz pehchanne ke liye internet chahiye.");
+      } else if (e.error !== "no-speech" && e.error !== "aborted") {
+        addError("Mic error: " + e.error);
+      }
+    };
+    recognition.onend = () => {
+      listening = false;
+      recognition = null;
+      if (busy) return;
+      if (!handsFree) {
+        const text = finalText.trim();
+        if (text) ask(text, true);
+        else if (app.dataset.state === "listening") setState("idle", idleStatus());
+      } else {
+        setTimeout(startListening, 250);
+      }
+    };
+    try { recognition.start(); } catch { listening = false; }
+  }
+  function stopListening() {
+    if (recognition) { try { recognition.abort(); } catch {} }
+    listening = false;
+  }
+  function onMicPress() {
+    haptic();
+    if (synth && synth.speaking) { synth.cancel(); return; }
+    if (busy) return;
+    if (!SR) { $("input").focus(); toast("Is browser mein mic support nahi. Chrome istemal karein."); return; }
+    if (handsFree) { awaitingCommand = true; setState("listening", "Ji, bataiye…"); if (!listening) startListening(); return; }
+    if (listening) { recognition && recognition.stop(); return; }
+    startListening();
+  }
+  $("orb").addEventListener("click", onMicPress);
+  $("mic").addEventListener("click", onMicPress);
+
+  // ---------- Composer ----------
+  $("input").addEventListener("input", () => { $("send").disabled = !$("input").value.trim(); });
+  $("composer").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = $("input").value;
+    $("input").value = "";
+    $("send").disabled = true;
+    ask(text);
+  });
+
+  // ---------- Hands-free ----------
+  function setHandsFree(on) {
+    handsFree = on;
+    $("heyToggle").setAttribute("aria-pressed", String(on));
+    $("heySwitch").setAttribute("aria-checked", String(on));
+    awaitingCommand = false;
+    stopListening();
+    setState("idle", idleStatus());
+    if (on) { toast(`"${APP_NAME}" bolein, phir apna kaam`); setTimeout(startListening, 300); }
+  }
+  $("heyToggle").addEventListener("click", () => setHandsFree(!handsFree));
+  $("heySwitch").addEventListener("click", () => setHandsFree(!handsFree));
+
+  // ---------- Settings ----------
+  function bindSeg(id, key, onChange) {
+    const seg = $(id);
+    const sync = () => seg.querySelectorAll("button").forEach(b => {
+      const on = b.dataset.value === settings[key];
+      b.setAttribute("aria-checked", String(on));
+      b.tabIndex = on ? 0 : -1;
+    });
+    seg.addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      settings[key] = b.dataset.value;
+      store.set(key, settings[key]);
+      sync();
+      if (onChange) onChange();
+    });
+    seg.addEventListener("keydown", (e) => {
+      if (!["ArrowLeft", "ArrowRight"].includes(e.key)) return;
+      e.preventDefault();
+      const btns = [...seg.querySelectorAll("button")];
+      const i = btns.findIndex(b => b.dataset.value === settings[key]);
+      const next = btns[(i + (e.key === "ArrowRight" ? 1 : btns.length - 1)) % btns.length];
+      next.click();
+      next.focus();
+    });
+    sync();
+  }
+  function applyTheme() {
+    if (settings.theme === "system") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.dataset.theme = settings.theme;
+  }
+  bindSeg("langSeg", "lang", () => { if (listening) { stopListening(); if (handsFree) setTimeout(startListening, 300); } });
+  bindSeg("themeSeg", "theme", applyTheme);
+  applyTheme();
+
+  $("speakSwitch").setAttribute("aria-checked", String(settings.speak));
+  $("speakSwitch").addEventListener("click", () => {
+    settings.speak = !settings.speak;
+    store.set("speak", settings.speak ? "1" : "0");
+    $("speakSwitch").setAttribute("aria-checked", String(settings.speak));
+    if (!settings.speak && synth) synth.cancel();
+  });
+  $("rate").value = settings.rate;
+  const showRate = () => { $("rateVal").textContent = `(${settings.rate.toFixed(1)}x)`; };
+  showRate();
+  $("rate").addEventListener("input", (e) => { settings.rate = parseFloat(e.target.value); store.set("rate", settings.rate); showRate(); });
+
+  $("settingsBtn").addEventListener("click", () => $("settings").showModal());
+  $("settings").addEventListener("click", (e) => {
+    if (e.target === $("settings") || e.target.closest("[data-close]")) $("settings").close();
+  });
+  $("resetBtn").addEventListener("click", async () => {
+    try {
+      await api("/api/reset", {});
+      pendingConfirm = null;
+      $("log").replaceChildren();
+      app.dataset.chat = "false";
+      setState("idle", idleStatus());
+      $("settings").close();
+      toast("Nai baat shuru");
+    } catch (e) { if (!(e instanceof AuthError)) toast(e.message); }
+  });
+
+  // ---------- Hero ----------
+  function greeting() {
+    const h = new Date().getHours();
+    if (h >= 5 && h < 12) return "Subah bakhair";
+    if (h >= 12 && h < 17) return "Assalam o Alaikum";
+    if (h >= 17 && h < 21) return "Shaam bakhair";
+    return "Shab bakhair";
+  }
+  $("greeting").textContent = greeting();
+  for (const s of SUGGESTIONS) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.innerHTML = icon(s.icon);
+    b.append(s.text);
+    b.addEventListener("click", () => ask(s.text));
+    $("chips").appendChild(b);
+  }
+
+  // ---------- Reminders ----------
+  async function checkReminders() {
+    if (passwordRequired && !password) return;
+    try {
+      const { reminders } = await api("/api/reminders");
+      for (const text of reminders) {
+        addRow("note", "Reminder: " + text);
+        toast("Reminder: " + text);
+        if ("Notification" in window && Notification.permission === "granted") new Notification(APP_NAME + " reminder", { body: text, icon: "/icon-192.png" });
+        if (!busy) { await speak("Reminder: " + text); setState("idle", idleStatus()); }
+      }
+    } catch {}
+  }
+  setInterval(checkReminders, 20000);
+  if ("Notification" in window && Notification.permission === "default") {
+    document.addEventListener("click", () => Notification.requestPermission(), { once: true });
+  }
+  window.addEventListener("online", () => setOnline(true));
+  window.addEventListener("offline", () => setOnline(false));
+
+  // ---------- Startup ----------
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+  if (!SR) $("hint").textContent = "Mic ke liye Chrome ya Edge istemal karein. Likh kar bhi pooch sakte hain.";
+  else if (!window.isSecureContext) $("hint").textContent = "Mic ke liye page https par kholna zaroori hai.";
+  fetch("/api/config").then(r => r.json()).then(cfg => {
+    passwordRequired = !!cfg.password_required;
+    $("logoutBtn").hidden = !passwordRequired;
+    if (passwordRequired && !password) showLogin();
+  }).catch(() => {});
+})();
+</script>
+</body>
+</html>
