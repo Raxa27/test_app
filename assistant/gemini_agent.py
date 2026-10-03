@@ -1,5 +1,6 @@
 """The same assistant, powered by Google Gemini (free tier available at aistudio.google.com)."""
 
+import logging
 import os
 import re
 import time
@@ -20,6 +21,7 @@ FALLBACK_MODELS = [
     if m.strip() and m.strip() != GEMINI_MODEL
 ]
 MAX_TOOL_ROUNDS = 12
+log = logging.getLogger("gemini_agent")
 RETRY_DELAYS = (1.5, 4)  # seconds between attempts on the same model when the service is busy
 
 
@@ -128,13 +130,15 @@ class GeminiAssistant:
             reply = self._loop()
         except errors.APIError as e:
             del self.history[start:]
+            log.warning("Gemini error %s: %s", e.code, e.message)
             if e.code in (401, 403) or "API key" in str(e):
                 raise AssistantError("Gemini API key ghalat hai ya missing hai (GEMINI_API_KEY).") from e
             if e.code == 429:
                 raise AssistantError("Free limit poori ho gayi. Thodi der baad koshish karein.") from e
             if e.code in (500, 502, 503, 504):
                 raise AssistantError("Gemini abhi bohat busy hai. 1-2 minute baad dobara poochein.") from e
-            raise AssistantError(f"AI service error {e.code}.") from e
+            detail = (e.message or e.status or "").strip()[:160]
+            raise AssistantError(f"AI service error {e.code}: {detail}" if detail else f"AI service error {e.code}.") from e
         except Exception:
             del self.history[start:]
             raise
