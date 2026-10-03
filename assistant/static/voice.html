@@ -746,15 +746,30 @@
     return voices.find(v => v.lang === code) || voices.find(v => v.lang.replace("_", "-").startsWith(base))
       || (base === "ur" ? voices.find(v => v.lang.startsWith("hi")) : null) || null;
   }
-  function speak(text) {
+  // Picks what to say and with which voice. Urdu replies come with a Devanagari copy (`speech`):
+  // phones without an Urdu voice speak that copy with a Hindi voice, which sounds the same spoken.
+  function chooseSpeech(text, speech) {
+    const voices = synth ? synth.getVoices() : [];
+    const find = (prefix) => voices.find(v => v.lang.replace("_", "-").toLowerCase().startsWith(prefix));
+    if (scriptOf(text) === "ur") {
+      const ur = find("ur");
+      if (ur) return { say: text, voice: ur, lang: ur.lang };
+      const hi = find("hi");
+      if (speech) return { say: speech, voice: hi || null, lang: hi ? hi.lang : "hi-IN" };
+      return { say: text, voice: hi || null, lang: "ur-PK" };
+    }
+    const code = scriptOf(text) === "hi" ? "hi-IN" : settings.lang;
+    const v = pickVoice(code);
+    return { say: text, voice: v, lang: v ? v.lang : code };
+  }
+  function speak(text, speech = null) {
     return new Promise((resolve) => {
       if (!synth || !settings.speak) return resolve();
       synth.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      const s = scriptOf(text);
-      const code = s === "ur" ? "ur-PK" : s === "hi" ? "hi-IN" : settings.lang;
-      const v = pickVoice(code);
-      if (v) { u.voice = v; u.lang = v.lang; } else { u.lang = code; }
+      const choice = chooseSpeech(text, speech);
+      const u = new SpeechSynthesisUtterance(choice.say);
+      if (choice.voice) u.voice = choice.voice;
+      u.lang = choice.lang;
       u.rate = settings.rate;
       u.onend = u.onerror = () => resolve();
       setState("speaking", "Bol raha hoon…");
@@ -850,6 +865,31 @@
     if (!opened) toast("Kholne ke liye button dabayein");
   }
 
+  // ---------- Location ----------
+  // Asked once (the browser shows "Allow location"); refreshed at most every 5 minutes.
+  let lastLocation = null;
+  let locationDenied = false;
+  function getLocation() {
+    if (locationDenied || !("geolocation" in navigator)) return Promise.resolve(null);
+    if (lastLocation && Date.now() - lastLocation.at < 5 * 60 * 1000) return Promise.resolve(lastLocation.coords);
+    return new Promise((resolve) => {
+      const done = (value) => { clearTimeout(timer); resolve(value); };
+      // Don't hold up the question if the GPS is slow; use the last known position instead.
+      const timer = setTimeout(() => resolve(lastLocation ? lastLocation.coords : null), 5000);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          lastLocation = { at: Date.now(), coords: { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: Math.round(pos.coords.accuracy) } };
+          done(lastLocation.coords);
+        },
+        (err) => {
+          if (err.code === err.PERMISSION_DENIED) locationDenied = true;
+          done(lastLocation ? lastLocation.coords : null);
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 5 * 60 * 1000 },
+      );
+    });
+  }
+
   // ---------- Asking ----------
   async function ask(text, byVoice = false) {
     text = text.trim();
@@ -867,11 +907,12 @@
     const typingRow = addRow("bot", typing);
     setState("thinking", "Soch raha hoon…");
     try {
-      const { reply, actions = [] } = await api("/api/ask", { text });
+      const location = await getLocation();
+      const { reply, speech = null, actions = [] } = await api("/api/ask", { text, location });
       typingRow.remove();
       addRow("bot", reply);
       for (const a of actions) addAction(a);
-      await speak(reply);
+      await speak(reply, speech);
     } catch (e) {
       typingRow.remove();
       if (!(e instanceof AuthError)) addError(e.message);

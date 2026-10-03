@@ -20,6 +20,7 @@ from pathlib import Path
 import anthropic
 
 from .agent import AssistantError, create_assistant
+from .location import describe as describe_location
 from .tools import pop_due_reminders
 
 log = logging.getLogger("voice_server")
@@ -36,6 +37,31 @@ MAX_BODY = 20_000
 
 assistant = create_assistant(voice=True)
 assistant_lock = threading.Lock()
+last_location = {"place": None}
+SAY_MARKER = "[[say]]"
+
+
+def _with_location(text: str, location) -> str:
+    """Prefix the message with the user's place when it is new or has changed."""
+    try:
+        lat, lng = float(location["lat"]), float(location["lng"])
+    except (TypeError, KeyError, ValueError):
+        return text
+    if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+        return text
+    place = describe_location(lat, lng)
+    if place == last_location["place"]:
+        return text
+    last_location["place"] = place
+    return f"[Context: user's current location: {place}]\n{text}"
+
+
+def _split_speech(reply: str) -> tuple[str, str | None]:
+    """Separate the on-screen reply from the Devanagari line meant only for text-to-speech."""
+    if SAY_MARKER not in reply:
+        return reply.strip(), None
+    shown, _, spoken = reply.partition(SAY_MARKER)
+    return shown.strip() or spoken.strip(), spoken.strip() or None
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -87,6 +113,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/api/reset":
             with assistant_lock:
                 assistant.reset()
+                last_location["place"] = None
             return self._json(200, {"ok": True})
         if self.path != "/api/ask":
             return self._json(404, {"error": "Not found."})
@@ -96,7 +123,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(400, {"error": "Empty message."})
         try:
             with assistant_lock:
-                reply = assistant.ask(text)
+                reply = assistant.ask(_with_location(text, data.get("location")))
                 actions = assistant.last_actions
         except AssistantError as e:
             return self._json(502, {"error": str(e)})
@@ -108,7 +135,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(502, {"error": "Could not reach the AI service."})
         except anthropic.APIStatusError as e:
             return self._json(502, {"error": f"AI service error {e.status_code}."})
-        self._json(200, {"reply": reply, "actions": actions})
+        shown, speech = _split_speech(reply)
+        self._json(200, {"reply": shown, "speech": speech, "actions": actions})
 
 
 def main() -> None:

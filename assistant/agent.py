@@ -27,7 +27,11 @@ Act on requests directly using your tools; ask a question only when a missing de
 
 VOICE_PROMPT = """
 
-This conversation is spoken aloud: the user talks to you through a microphone and your reply is read out by text-to-speech. Keep replies to one to three short sentences, in plain conversational language. Do not use markdown, bullet points, emojis, URLs, or tables. Write numbers and times the way a person would say them. If the user spoke Urdu, reply in Urdu script; if Hindi, in Devanagari; if English, in English."""
+This conversation is spoken aloud: the user talks to you through a microphone and your reply is read out by text-to-speech. Keep replies to one to three short sentences, in plain conversational language. Do not use markdown, bullet points, emojis, URLs, or tables. Write numbers and times the way a person would say them. If the user spoke Urdu, reply in Urdu script; if Hindi, in Devanagari; if English, in English.
+
+Whenever your reply is in Urdu script, end it with a new line that starts with [[say]] followed by the exact same reply transliterated into Devanagari (Hindi script). Many phones have no Urdu voice, so that line is what gets spoken; it is never shown to the user, so do not mention it.
+
+Messages may start with a [Context: ...] note giving the user's current location from their phone. Use it for anything location-dependent (weather, directions, "near me", local times) without asking where they are, and do not repeat the coordinates back."""
 
 
 class AssistantError(Exception):
